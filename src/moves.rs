@@ -2,9 +2,9 @@ use std::fmt;
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum MoveType {
-    Normal,
-    Double,
-    Prime,
+    Normal = 1,
+    Double = 2,
+    Prime = 3,
 }
 
 impl fmt::Display for MoveType {
@@ -17,7 +17,6 @@ impl fmt::Display for MoveType {
     }
 }
 
-#[allow(non_camel_case_types)]
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Move {
     U(MoveType),
@@ -27,17 +26,17 @@ pub enum Move {
     L(MoveType),
     D(MoveType),
     M(MoveType),
-    E(MoveType),
     S(MoveType),
-    u(MoveType),
-    f(MoveType),
-    r(MoveType),
-    b(MoveType),
-    l(MoveType),
-    d(MoveType),
-    x(MoveType),
-    y(MoveType),
-    z(MoveType),
+    E(MoveType),
+    X(MoveType),
+    Y(MoveType),
+    Z(MoveType),
+    Uw(MoveType),
+    Fw(MoveType),
+    Rw(MoveType),
+    Bw(MoveType),
+    Lw(MoveType),
+    Dw(MoveType),
 }
 
 impl fmt::Display for Move {
@@ -50,17 +49,17 @@ impl fmt::Display for Move {
             Move::L(t) => write!(f, "L{t}"),
             Move::D(t) => write!(f, "D{t}"),
             Move::M(t) => write!(f, "M{t}"),
-            Move::E(t) => write!(f, "E{t}"),
             Move::S(t) => write!(f, "S{t}"),
-            Move::u(t) => write!(f, "u{t}"),
-            Move::f(t) => write!(f, "f{t}"),
-            Move::r(t) => write!(f, "r{t}"),
-            Move::b(t) => write!(f, "b{t}"),
-            Move::l(t) => write!(f, "l{t}"),
-            Move::d(t) => write!(f, "d{t}"),
-            Move::x(t) => write!(f, "x{t}"),
-            Move::y(t) => write!(f, "y{t}"),
-            Move::z(t) => write!(f, "z{t}"),
+            Move::E(t) => write!(f, "E{t}"),
+            Move::X(t) => write!(f, "x{t}"),
+            Move::Y(t) => write!(f, "y{t}"),
+            Move::Z(t) => write!(f, "z{t}"),
+            Move::Uw(t) => write!(f, "u{t}"),
+            Move::Fw(t) => write!(f, "f{t}"),
+            Move::Rw(t) => write!(f, "r{t}"),
+            Move::Bw(t) => write!(f, "b{t}"),
+            Move::Lw(t) => write!(f, "l{t}"),
+            Move::Dw(t) => write!(f, "d{t}"),
         }
     }
 }
@@ -82,17 +81,17 @@ impl Move {
             "L" => Some(Move::L(t)),
             "D" => Some(Move::D(t)),
             "M" => Some(Move::M(t)),
-            "E" => Some(Move::E(t)),
             "S" => Some(Move::S(t)),
-            "u" => Some(Move::u(t)),
-            "f" => Some(Move::f(t)),
-            "r" => Some(Move::r(t)),
-            "b" => Some(Move::b(t)),
-            "l" => Some(Move::l(t)),
-            "d" => Some(Move::d(t)),
-            "x" => Some(Move::x(t)),
-            "y" => Some(Move::y(t)),
-            "z" => Some(Move::z(t)),
+            "E" => Some(Move::E(t)),
+            "x" => Some(Move::X(t)),
+            "y" => Some(Move::Y(t)),
+            "z" => Some(Move::Z(t)),
+            "u" => Some(Move::Uw(t)),
+            "f" => Some(Move::Fw(t)),
+            "r" => Some(Move::Rw(t)),
+            "b" => Some(Move::Bw(t)),
+            "l" => Some(Move::Lw(t)),
+            "d" => Some(Move::Dw(t)),
             _ => None,
         }
     }
@@ -106,40 +105,17 @@ impl Move {
             | Move::L(t)
             | Move::D(t)
             | Move::M(t)
-            | Move::E(t)
             | Move::S(t)
-            | Move::u(t)
-            | Move::f(t)
-            | Move::r(t)
-            | Move::b(t)
-            | Move::l(t)
-            | Move::d(t)
-            | Move::x(t)
-            | Move::y(t)
-            | Move::z(t) => *t,
-        }
-    }
-
-    pub fn derivate(&self, t: MoveType) -> Self {
-        match self {
-            Move::U(_) => Move::U(t),
-            Move::F(_) => Move::F(t),
-            Move::R(_) => Move::R(t),
-            Move::B(_) => Move::B(t),
-            Move::L(_) => Move::L(t),
-            Move::D(_) => Move::D(t),
-            Move::M(_) => Move::M(t),
-            Move::E(_) => Move::E(t),
-            Move::S(_) => Move::S(t),
-            Move::u(_) => Move::u(t),
-            Move::f(_) => Move::f(t),
-            Move::r(_) => Move::r(t),
-            Move::b(_) => Move::b(t),
-            Move::l(_) => Move::l(t),
-            Move::d(_) => Move::d(t),
-            Move::x(_) => Move::x(t),
-            Move::y(_) => Move::y(t),
-            Move::z(_) => Move::z(t),
+            | Move::E(t)
+            | Move::X(t)
+            | Move::Y(t)
+            | Move::Z(t)
+            | Move::Uw(t)
+            | Move::Fw(t)
+            | Move::Rw(t)
+            | Move::Bw(t)
+            | Move::Lw(t)
+            | Move::Dw(t) => *t,
         }
     }
 }
