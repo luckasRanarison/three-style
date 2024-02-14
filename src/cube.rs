@@ -1,7 +1,4 @@
-use crate::{
-    facelet::*,
-    moves::{Move, MoveType},
-};
+use crate::{facelet::*, moves::Move};
 use std::ops::Mul;
 
 #[derive(Debug, PartialEq, Clone)]
@@ -40,42 +37,50 @@ impl Mul<Cube> for Cube {
     }
 }
 
+impl From<Move> for Cube {
+    fn from(m: Move) -> Self {
+        let count = m.get_type() as usize;
+        let move_state = match m {
+            Move::U(_) => U_CUBE,
+            Move::F(_) => F_CUBE,
+            Move::R(_) => R_CUBE,
+            Move::B(_) => B_CUBE,
+            Move::L(_) => L_CUBE,
+            Move::D(_) => D_CUBE,
+            Move::M(_) => M_CUBE,
+            Move::S(_) => S_CUBE,
+            Move::E(_) => E_CUBE,
+            Move::X(_) => X_CUBE,
+            Move::Y(_) => Y_CUBE,
+            Move::Z(_) => Z_CUBE,
+            Move::Fw(_) => F_CUBE * S_CUBE,
+            Move::Lw(_) => L_CUBE * M_CUBE,
+            Move::Dw(_) => D_CUBE * E_CUBE,
+            Move::Uw(_) => U_CUBE * E_CUBE.repeat(3),
+            Move::Rw(_) => R_CUBE * M_CUBE.repeat(3),
+            Move::Bw(_) => B_CUBE * S_CUBE.repeat(3),
+        };
+
+        move_state.repeat(count)
+    }
+}
+
 impl Cube {
     pub fn apply_move(self, m: Move) -> Self {
-        match m.get_type() {
-            MoveType::Normal => self.apply_normal_move(m),
-            MoveType::Double => self.apply_normal_move(m).apply_normal_move(m),
-            MoveType::Prime => self
-                .apply_normal_move(m)
-                .apply_normal_move(m)
-                .apply_normal_move(m),
-        }
+        self * Cube::from(m)
     }
 
     pub fn apply_moves(self, moves: &[Move]) -> Self {
         moves.iter().fold(self, |acc, m| acc.apply_move(*m))
     }
 
-    fn apply_normal_move(self, m: Move) -> Self {
-        match m {
-            Move::U(_) => self * U_CUBE,
-            Move::F(_) => self * F_CUBE,
-            Move::R(_) => self * R_CUBE,
-            Move::B(_) => self * B_CUBE,
-            Move::L(_) => self * L_CUBE,
-            Move::D(_) => self * D_CUBE,
-            Move::M(_) => self * M_CUBE,
-            Move::S(_) => self * S_CUBE,
-            Move::E(_) => self * E_CUBE,
-            Move::X(_) => self * X_CUBE,
-            Move::Y(_) => self * Y_CUBE,
-            Move::Z(_) => self * Z_CUBE,
-            Move::Fw(_) => self * F_CUBE * S_CUBE,
-            Move::Lw(_) => self * L_CUBE * M_CUBE,
-            Move::Dw(_) => self * D_CUBE * E_CUBE,
-            Move::Uw(_) => self * U_CUBE * E_CUBE * E_CUBE * E_CUBE,
-            Move::Rw(_) => self * R_CUBE * M_CUBE * M_CUBE * M_CUBE,
-            Move::Bw(_) => self * B_CUBE * S_CUBE * S_CUBE * S_CUBE,
+    fn repeat(self, count: usize) -> Self {
+        if count > 1 {
+            vec![self.clone(); count - 1]
+                .into_iter()
+                .fold(self, |acc, m| acc * m)
+        } else {
+            self
         }
     }
 }
