@@ -92,3 +92,53 @@ pub const M_STATE: FaceState = [
     F::L0, F::L1, F::L2, F::L3, F::L4, F::L5, F::L6, F::L7, F::L8,
     F::D0, F::F1, F::D2, F::D3, F::F4, F::D5, F::D6, F::F7, F::D8,
 ];
+
+#[rustfmt::skip]
+pub const E_STATE: FaceState = [
+    F::U0, F::U1, F::U2, F::U3, F::U4, F::U5, F::U6, F::U7, F::U8,
+    F::F0, F::F1, F::F2, F::L3, F::L4, F::L5, F::F6, F::F7, F::F8,
+    F::R0, F::R1, F::R2, F::F3, F::F4, F::F5, F::R6, F::R7, F::R8,
+    F::B0, F::B1, F::B2, F::R3, F::R4, F::R5, F::B6, F::B7, F::B8,
+    F::L0, F::L1, F::L2, F::B3, F::B4, F::B5, F::L6, F::L7, F::L8,
+    F::D0, F::D1, F::D2, F::D3, F::D4, F::D5, F::D6, F::D7, F::D8,
+];
+
+#[rustfmt::skip]
+pub const S_STATE: FaceState = [
+    F::U0, F::U1, F::U2, F::L7, F::L4, F::L1, F::U6, F::U7, F::U8,
+    F::F0, F::F1, F::F2, F::F3, F::F4, F::F5, F::F6, F::F7, F::F8,
+    F::R0, F::U3, F::R2, F::R3, F::U4, F::R5, F::R6, F::U5, F::R8,
+    F::B0, F::B1, F::B2, F::B3, F::B4, F::B5, F::B6, F::B7, F::B8,
+    F::L0, F::D3, F::L2, F::L3, F::D4, F::L5, F::L6, F::D5, F::L8,
+    F::D0, F::D1, F::D2, F::R7, F::R4, F::R1, F::D6, F::D7, F::D8,
+];
+
+#[rustfmt::skip]
+pub const X_STATE: FaceState = [
+    F::F0, F::F1, F::F2, F::F3, F::F4, F::F5, F::F6, F::F7, F::F8,
+    F::D0, F::D1, F::D2, F::D3, F::D4, F::D5, F::D6, F::D7, F::D8,
+    F::R6, F::R3, F::R0, F::R7, F::R4, F::R1, F::R8, F::R5, F::R2,
+    F::U8, F::U7, F::U6, F::U5, F::U4, F::U3, F::U2, F::U1, F::U0,
+    F::L2, F::L5, F::L8, F::L1, F::L4, F::L3, F::L0, F::L3, F::L6,
+    F::B8, F::B7, F::B6, F::B5, F::B4, F::B3, F::B2, F::B1, F::B0,
+];
+
+#[rustfmt::skip]
+pub const Y_STATE: FaceState = [
+    F::U6, F::U3, F::U0, F::U7, F::U4, F::U1, F::U8, F::U5, F::U2,
+    F::R0, F::R1, F::R2, F::R3, F::R4, F::R5, F::R6, F::R7, F::R8,
+    F::B0, F::B1, F::B2, F::B3, F::B4, F::B5, F::B6, F::B7, F::B8,
+    F::L0, F::L1, F::L2, F::L3, F::L4, F::L5, F::L6, F::L7, F::L8,
+    F::F0, F::F1, F::F2, F::F3, F::F4, F::F5, F::F6, F::F7, F::F8,
+    F::D2, F::D5, F::D8, F::D1, F::D4, F::D3, F::D0, F::D3, F::D6,
+];
+
+#[rustfmt::skip]
+pub const Z_STATE: FaceState = [
+    F::L6, F::L3, F::L0, F::L7, F::L4, F::L1, F::L8, F::L5, F::L2,
+    F::F6, F::F3, F::F0, F::F7, F::F4, F::F1, F::F8, F::F5, F::F2,
+    F::U6, F::U3, F::U0, F::U7, F::U4, F::U1, F::U8, F::U5, F::U2,
+    F::B2, F::B5, F::B8, F::B1, F::B4, F::B3, F::B0, F::B3, F::B6,
+    F::D6, F::D3, F::D0, F::D7, F::D4, F::D1, F::D8, F::D5, F::D2,
+    F::R6, F::R3, F::R0, F::R7, F::R4, F::R1, F::R8, F::R5, F::R2,
+];
