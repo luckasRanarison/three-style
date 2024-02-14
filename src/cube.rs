@@ -43,12 +43,12 @@ impl Mul<Cube> for Cube {
 impl Cube {
     pub fn apply_move(self, m: Move) -> Self {
         match m.get_type() {
-            MoveType::Normal => self.apply_single_move(m),
-            MoveType::Double => self.apply_single_move(m).apply_single_move(m),
+            MoveType::Normal => self.apply_normal_move(m),
+            MoveType::Double => self.apply_normal_move(m).apply_normal_move(m),
             MoveType::Prime => self
-                .apply_single_move(m)
-                .apply_single_move(m)
-                .apply_single_move(m),
+                .apply_normal_move(m)
+                .apply_normal_move(m)
+                .apply_normal_move(m),
         }
     }
 
@@ -56,7 +56,7 @@ impl Cube {
         moves.iter().fold(self, |acc, m| acc.apply_move(*m))
     }
 
-    fn apply_single_move(self, m: Move) -> Self {
+    fn apply_normal_move(self, m: Move) -> Self {
         match m {
             Move::U(_) => self * U_CUBE,
             Move::F(_) => self * F_CUBE,
@@ -70,12 +70,12 @@ impl Cube {
             Move::X(_) => self * X_CUBE,
             Move::Y(_) => self * Y_CUBE,
             Move::Z(_) => self * Z_CUBE,
-            Move::Fw(_) => (self * F_CUBE) * S_CUBE,
-            Move::Lw(_) => (self * L_CUBE) * M_CUBE,
-            Move::Dw(_) => (self * D_CUBE) * E_CUBE,
-            Move::Uw(_) => (self * U_CUBE).apply_move(Move::E(MoveType::Prime)),
-            Move::Rw(_) => (self * R_CUBE).apply_move(Move::M(MoveType::Prime)),
-            Move::Bw(_) => (self * B_CUBE).apply_move(Move::S(MoveType::Prime)),
+            Move::Fw(_) => self * F_CUBE * S_CUBE,
+            Move::Lw(_) => self * L_CUBE * M_CUBE,
+            Move::Dw(_) => self * D_CUBE * E_CUBE,
+            Move::Uw(_) => self * U_CUBE * E_CUBE * E_CUBE * E_CUBE,
+            Move::Rw(_) => self * R_CUBE * M_CUBE * M_CUBE * M_CUBE,
+            Move::Bw(_) => self * B_CUBE * S_CUBE * S_CUBE * S_CUBE,
         }
     }
 }
@@ -136,15 +136,15 @@ mod tests {
         let cube = cube_from_str("x y z");
 
         #[rustfmt::skip]
-        let expected = Cube([
-            F::U0, F::U1, F::U2, F::U3, F::U4, F::U5, F::U6, F::U7, F::U8,
-            F::F0, F::F1, F::F2, F::F3, F::F4, F::F5, F::F6, F::F7, F::F8,
-            F::R0, F::R1, F::R2, F::R3, F::R4, F::R5, F::R6, F::R7, F::R8,
-            F::B0, F::B1, F::B2, F::B3, F::B4, F::B5, F::B6, F::B7, F::B8,
-            F::L0, F::L1, F::L2, F::L3, F::L4, F::L5, F::L6, F::L7, F::L8,
-            F::D0, F::D1, F::D2, F::D3, F::D4, F::D5, F::D6, F::D7, F::D8,
+        let expecte = Cube([
+            F::D6, F::D3, F::D0, F::D7, F::D4, F::D1, F::D8, F::D5, F::D2,
+            F::R8, F::R7, F::R6, F::R5, F::R4, F::R3, F::R2, F::R1, F::R0,
+            F::F8, F::F7, F::F6, F::F5, F::F4, F::F3, F::F2, F::F1, F::F0,
+            F::L8, F::L7, F::L6, F::L5, F::L4, F::L3, F::L2, F::L1, F::L0,
+            F::B8, F::B7, F::B6, F::B5, F::B4, F::B3, F::B2, F::B1, F::B0,
+            F::U2, F::U5, F::U8, F::U1, F::U4, F::U7, F::U0, F::U3, F::U6,
         ]);
 
-        assert_eq!(expected, cube);
+        assert_eq!(expecte, cube);
     }
 }

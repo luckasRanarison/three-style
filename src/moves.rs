@@ -2,9 +2,9 @@ use std::fmt;
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum MoveType {
-    Normal,
-    Double,
-    Prime,
+    Normal = 1,
+    Double = 2,
+    Prime = 3,
 }
 
 impl fmt::Display for MoveType {
