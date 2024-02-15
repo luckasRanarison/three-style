@@ -174,7 +174,13 @@ impl ThreeCycle for Cube {
 
 #[cfg(test)]
 mod tests {
-    use crate::{facelet::Facelet as F, moves::moves_from_str, state::Cube};
+    use super::ThreeCycle;
+    use crate::{
+        facelet::Facelet as F,
+        moves::moves_from_str,
+        state::Cube,
+        sticker::{CornerSticker, EdgeSticker},
+    };
 
     fn cube_from_str(s: &str) -> Cube {
         let moves = moves_from_str(s).unwrap();
@@ -238,5 +244,55 @@ mod tests {
         ]);
 
         assert_eq!(expecte, cube);
+    }
+
+    #[test]
+    fn test_edge_cycle() {
+        let cube = Cube::default()
+            .edge_cycle(EdgeSticker::UF, EdgeSticker::UB, EdgeSticker::FL)
+            .unwrap();
+
+        #[rustfmt::skip]
+        let expecte = Cube([
+            F::U0, F::U7, F::U2, F::U3, F::U4, F::U5, F::U6, F::F3, F::U8,
+            F::F0, F::L5, F::F2, F::U1, F::F4, F::F5, F::F6, F::F7, F::F8,
+            F::R0, F::R1, F::R2, F::R3, F::R4, F::R5, F::R6, F::R7, F::R8,
+            F::B0, F::F1, F::B2, F::B3, F::B4, F::B5, F::B6, F::B7, F::B8,
+            F::L0, F::L1, F::L2, F::L3, F::L4, F::B1, F::L6, F::L7, F::L8,
+            F::D0, F::D1, F::D2, F::D3, F::D4, F::D5, F::D6, F::D7, F::D8,
+        ]);
+
+        assert_eq!(expecte, cube);
+
+        let cube = cube
+            .edge_cycle(EdgeSticker::UF, EdgeSticker::FL, EdgeSticker::UB)
+            .unwrap();
+
+        assert_eq!(Cube::default(), cube);
+    }
+
+    #[test]
+    fn test_corner_cycle() {
+        let cube = Cube::default()
+            .corner_cycle(CornerSticker::UFR, CornerSticker::ULF, CornerSticker::RFD)
+            .unwrap();
+
+        #[rustfmt::skip]
+        let expecte = Cube([
+            F::U0, F::U1, F::U2, F::U3, F::U4, F::U5, F::U8, F::U7, F::R6,
+            F::R0, F::F1, F::F8, F::F3, F::F4, F::F5, F::F6, F::F7, F::L2,
+            F::D2, F::R1, F::R2, F::R3, F::R4, F::R5, F::U6, F::R7, F::R8,
+            F::B0, F::B1, F::B2, F::B3, F::B4, F::B5, F::B6, F::B7, F::B8,
+            F::L0, F::L1, F::F2, F::L3, F::L4, F::L5, F::L6, F::L7, F::L8,
+            F::D0, F::D1, F::F0, F::D3, F::D4, F::D5, F::D6, F::D7, F::D8,
+        ]);
+
+        assert_eq!(expecte, cube);
+
+        let cube = cube
+            .corner_cycle(CornerSticker::UFR, CornerSticker::RFD, CornerSticker::ULF)
+            .unwrap();
+
+        assert_eq!(Cube::default(), cube);
     }
 }
