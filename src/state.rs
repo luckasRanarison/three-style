@@ -2,7 +2,7 @@ use crate::{
     error::Error,
     facelet::*,
     moves::{Move, MoveKind},
-    sticker::{CornerSticker, EdgeSticker},
+    sticker::{Corner, Edge},
 };
 use std::{collections::HashSet, ops::Mul};
 
@@ -91,27 +91,12 @@ impl Cube {
 }
 
 trait ThreeCycle: Sized {
-    fn edge_cycle(
-        self,
-        first: EdgeSticker,
-        second: EdgeSticker,
-        third: EdgeSticker,
-    ) -> Result<Self, Error>;
-    fn corner_cycle(
-        self,
-        first: CornerSticker,
-        second: CornerSticker,
-        third: CornerSticker,
-    ) -> Result<Self, Error>;
+    fn edge_cycle(self, first: Edge, second: Edge, third: Edge) -> Result<Self, Error>;
+    fn corner_cycle(self, first: Corner, second: Corner, third: Corner) -> Result<Self, Error>;
 }
 
 impl ThreeCycle for Cube {
-    fn edge_cycle(
-        self,
-        first: EdgeSticker,
-        second: EdgeSticker,
-        third: EdgeSticker,
-    ) -> Result<Self, Error> {
+    fn edge_cycle(self, first: Edge, second: Edge, third: Edge) -> Result<Self, Error> {
         let mut res = self.clone();
         let first_facelets = first.into_facelet();
         let second_facelets = second.into_facelet();
@@ -137,12 +122,7 @@ impl ThreeCycle for Cube {
         }
     }
 
-    fn corner_cycle(
-        self,
-        first: CornerSticker,
-        second: CornerSticker,
-        third: CornerSticker,
-    ) -> Result<Self, Error> {
+    fn corner_cycle(self, first: Corner, second: Corner, third: Corner) -> Result<Self, Error> {
         let mut res = self.clone();
         let first_facelets = first.into_facelet();
         let second_facelets = second.into_facelet();
@@ -179,7 +159,7 @@ mod tests {
         facelet::Facelet as F,
         moves::moves_from_str,
         state::Cube,
-        sticker::{CornerSticker, EdgeSticker},
+        sticker::{Corner, Edge},
     };
 
     fn cube_from_str(s: &str) -> Cube {
@@ -249,7 +229,7 @@ mod tests {
     #[test]
     fn test_edge_cycle() {
         let cube = Cube::default()
-            .edge_cycle(EdgeSticker::UF, EdgeSticker::UB, EdgeSticker::FL)
+            .edge_cycle(Edge::UF, Edge::UB, Edge::FL)
             .unwrap();
 
         #[rustfmt::skip]
@@ -264,9 +244,7 @@ mod tests {
 
         assert_eq!(expecte, cube);
 
-        let cube = cube
-            .edge_cycle(EdgeSticker::UF, EdgeSticker::FL, EdgeSticker::UB)
-            .unwrap();
+        let cube = cube.edge_cycle(Edge::UF, Edge::FL, Edge::UB).unwrap();
 
         assert_eq!(Cube::default(), cube);
     }
@@ -274,7 +252,7 @@ mod tests {
     #[test]
     fn test_corner_cycle() {
         let cube = Cube::default()
-            .corner_cycle(CornerSticker::UFR, CornerSticker::ULF, CornerSticker::RFD)
+            .corner_cycle(Corner::UFR, Corner::ULF, Corner::RFD)
             .unwrap();
 
         #[rustfmt::skip]
@@ -290,7 +268,7 @@ mod tests {
         assert_eq!(expecte, cube);
 
         let cube = cube
-            .corner_cycle(CornerSticker::UFR, CornerSticker::RFD, CornerSticker::ULF)
+            .corner_cycle(Corner::UFR, Corner::RFD, Corner::ULF)
             .unwrap();
 
         assert_eq!(Cube::default(), cube);

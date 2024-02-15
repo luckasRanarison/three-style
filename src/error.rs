@@ -1,6 +1,6 @@
 use thiserror::Error;
 
-use crate::sticker::{CornerSticker, EdgeSticker};
+use crate::sticker::{Corner, Edge};
 
 #[derive(Debug, Error, PartialEq)]
 pub enum Error {
@@ -11,7 +11,7 @@ pub enum Error {
     #[error("Invalid corner: {0}")]
     InvalidEdgeString(String),
     #[error("Invalid corner cycle: {:?} - {:?} - {:?}", .0, .1, .2)]
-    InvalidCornerCycle(CornerSticker, CornerSticker, CornerSticker),
+    InvalidCornerCycle(Corner, Corner, Corner),
     #[error("Invalid edge cycle: {:?} - {:?} - {:?}", .0, .1, .2)]
-    InvalidEdgeCycle(EdgeSticker, EdgeSticker, EdgeSticker),
+    InvalidEdgeCycle(Edge, Edge, Edge),
 }

@@ -1,16 +1,63 @@
 use crate::{error::Error, facelet::Facelet};
 use std::str::FromStr;
 
-#[derive(Debug, Clone, Copy, PartialEq)]
-pub enum CornerOri {
-    Normal,
-    Clockwise,
-    CounterClockwise,
-}
+const CORNER_FACELET_MAP: [[Facelet; 3]; 24] = [
+    [Facelet::U0, Facelet::B2, Facelet::L0], // UBL
+    [Facelet::B2, Facelet::L0, Facelet::U0], // BLU
+    [Facelet::L0, Facelet::U0, Facelet::B2], // LUB
+    [Facelet::U2, Facelet::R2, Facelet::B0], // URB
+    [Facelet::R2, Facelet::B0, Facelet::U2], // RBU
+    [Facelet::B0, Facelet::U2, Facelet::R2], // BUR
+    [Facelet::U8, Facelet::F2, Facelet::R0], // UFR
+    [Facelet::F2, Facelet::R0, Facelet::U8], // FRU
+    [Facelet::R0, Facelet::U8, Facelet::F2], // RUF
+    [Facelet::U6, Facelet::L2, Facelet::F0], // ULF
+    [Facelet::L2, Facelet::F0, Facelet::U6], // LFU
+    [Facelet::F0, Facelet::U6, Facelet::L2], // FUL
+    [Facelet::D0, Facelet::F6, Facelet::L8], // DFL
+    [Facelet::F6, Facelet::L8, Facelet::D0], // FLD
+    [Facelet::L8, Facelet::D0, Facelet::F6], // LDF
+    [Facelet::D2, Facelet::R6, Facelet::F8], // DRF
+    [Facelet::R6, Facelet::F8, Facelet::D2], // RFD
+    [Facelet::F8, Facelet::D2, Facelet::R6], // FDR
+    [Facelet::D8, Facelet::B6, Facelet::R8], // DBR
+    [Facelet::B6, Facelet::R8, Facelet::D8], // BRD
+    [Facelet::R8, Facelet::D8, Facelet::B6], // RDB
+    [Facelet::D6, Facelet::L6, Facelet::B8], // DLB
+    [Facelet::L6, Facelet::B8, Facelet::D6], // LBD
+    [Facelet::B8, Facelet::D6, Facelet::L6], // BDL
+];
+
+const EDGE_FACELET_MAP: [[Facelet; 2]; 24] = [
+    [Facelet::U1, Facelet::B1], // UB
+    [Facelet::B1, Facelet::U1], // BU
+    [Facelet::U5, Facelet::R1], // UR
+    [Facelet::R1, Facelet::U5], // RU
+    [Facelet::U7, Facelet::F1], // UF
+    [Facelet::F1, Facelet::U7], // FU
+    [Facelet::U3, Facelet::L1], // UL
+    [Facelet::L1, Facelet::U3], // LU
+    [Facelet::F3, Facelet::L5], // FL
+    [Facelet::L5, Facelet::F3], // LF
+    [Facelet::F6, Facelet::R3], // FR
+    [Facelet::R3, Facelet::F6], // RF
+    [Facelet::B3, Facelet::R5], // BR
+    [Facelet::R5, Facelet::B3], // RB
+    [Facelet::B5, Facelet::L3], // BL
+    [Facelet::L3, Facelet::B5], // LB
+    [Facelet::D1, Facelet::F7], // DF
+    [Facelet::F7, Facelet::D1], // FD
+    [Facelet::D5, Facelet::R7], // DR
+    [Facelet::R7, Facelet::D5], // RD
+    [Facelet::D7, Facelet::B7], // DB
+    [Facelet::B7, Facelet::D7], // BD
+    [Facelet::D3, Facelet::L7], // DL
+    [Facelet::L7, Facelet::D3], // LD
+];
 
 #[rustfmt::skip]
 #[derive(Debug, PartialEq, Clone, Copy)]
-pub enum CornerSticker {
+pub enum Corner {
     UBL, BLU, LUB,
     URB, RBU, BUR,
     UFR, FRU, RUF,
@@ -21,42 +68,13 @@ pub enum CornerSticker {
     DLB, LBD, BDL,
 }
 
-impl CornerSticker {
-    pub fn orientation(&self) -> CornerOri {
-        match self {
-            Self::UBL
-            | Self::URB
-            | Self::UFR
-            | Self::ULF
-            | Self::DFL
-            | Self::DRF
-            | Self::DBR
-            | Self::DLB => CornerOri::Normal,
-            Self::BLU
-            | Self::RBU
-            | Self::FRU
-            | Self::LFU
-            | Self::FLD
-            | Self::RFD
-            | Self::BRD
-            | Self::LBD => CornerOri::Clockwise,
-            Self::LUB
-            | Self::BUR
-            | Self::RUF
-            | Self::FUL
-            | Self::LDF
-            | Self::FDR
-            | Self::RDB
-            | Self::BDL => CornerOri::CounterClockwise,
-        }
-    }
-
+impl Corner {
     pub fn into_facelet(self) -> [Facelet; 3] {
         CORNER_FACELET_MAP[self as usize]
     }
 }
 
-impl FromStr for CornerSticker {
+impl FromStr for Corner {
     type Err = Error;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
@@ -90,42 +108,9 @@ impl FromStr for CornerSticker {
     }
 }
 
-const CORNER_FACELET_MAP: [[Facelet; 3]; 24] = [
-    [Facelet::U0, Facelet::B2, Facelet::L0], // UBL
-    [Facelet::B2, Facelet::L0, Facelet::U0], // BLU
-    [Facelet::L0, Facelet::U0, Facelet::B2], // LUB
-    [Facelet::U2, Facelet::R2, Facelet::B0], // URB
-    [Facelet::R2, Facelet::B0, Facelet::U2], // RBU
-    [Facelet::B0, Facelet::U2, Facelet::R2], // BUR
-    [Facelet::U8, Facelet::F2, Facelet::R0], // UFR
-    [Facelet::F2, Facelet::R0, Facelet::U8], // FRU
-    [Facelet::R0, Facelet::U8, Facelet::F2], // RUF
-    [Facelet::U6, Facelet::L2, Facelet::F0], // ULF
-    [Facelet::L2, Facelet::F0, Facelet::U6], // LFU
-    [Facelet::F0, Facelet::U6, Facelet::L2], // FUL
-    [Facelet::D0, Facelet::F6, Facelet::L8], // DFL
-    [Facelet::F6, Facelet::L8, Facelet::D0], // FLD
-    [Facelet::L8, Facelet::D0, Facelet::F6], // LDF
-    [Facelet::D2, Facelet::R6, Facelet::F8], // DRF
-    [Facelet::R6, Facelet::F8, Facelet::D2], // RFD
-    [Facelet::F8, Facelet::D2, Facelet::R6], // FDR
-    [Facelet::D8, Facelet::B6, Facelet::R8], // DBR
-    [Facelet::B6, Facelet::R8, Facelet::D8], // BRD
-    [Facelet::R8, Facelet::D8, Facelet::B6], // RDB
-    [Facelet::D6, Facelet::L6, Facelet::B8], // DLB
-    [Facelet::L6, Facelet::B8, Facelet::D6], // LBD
-    [Facelet::B8, Facelet::D6, Facelet::L6], // BDL
-];
-
-#[derive(Debug, Clone, Copy, PartialEq)]
-pub enum EdgeOri {
-    Normal,
-    Fliped,
-}
-
 #[rustfmt::skip]
 #[derive(Debug, PartialEq, Clone, Copy)]
-pub enum EdgeSticker {
+pub enum Edge {
     UB, BU,
     UR, RU,
     UF, FU,
@@ -140,42 +125,13 @@ pub enum EdgeSticker {
     DL, LD,
 }
 
-impl EdgeSticker {
-    pub fn orientation(&self) -> EdgeOri {
-        match self {
-            Self::UB
-            | Self::UR
-            | Self::UF
-            | Self::UL
-            | Self::FL
-            | Self::FR
-            | Self::BR
-            | Self::BL
-            | Self::DF
-            | Self::DR
-            | Self::DB
-            | Self::DL => EdgeOri::Normal,
-            Self::BU
-            | Self::RU
-            | Self::FU
-            | Self::LU
-            | Self::LF
-            | Self::RF
-            | Self::RB
-            | Self::LB
-            | Self::FD
-            | Self::RD
-            | Self::BD
-            | Self::LD => EdgeOri::Fliped,
-        }
-    }
-
+impl Edge {
     pub fn into_facelet(self) -> [Facelet; 2] {
         EDGE_FACELET_MAP[self as usize]
     }
 }
 
-impl FromStr for EdgeSticker {
+impl FromStr for Edge {
     type Err = Error;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
@@ -208,30 +164,3 @@ impl FromStr for EdgeSticker {
         }
     }
 }
-
-const EDGE_FACELET_MAP: [[Facelet; 2]; 24] = [
-    [Facelet::U1, Facelet::B1], // UB
-    [Facelet::B1, Facelet::U1], // BU
-    [Facelet::U5, Facelet::R1], // UR
-    [Facelet::R1, Facelet::U5], // RU
-    [Facelet::U7, Facelet::F1], // UF
-    [Facelet::F1, Facelet::U7], // FU
-    [Facelet::U3, Facelet::L1], // UL
-    [Facelet::L1, Facelet::U3], // LU
-    [Facelet::F3, Facelet::L5], // FL
-    [Facelet::L5, Facelet::F3], // LF
-    [Facelet::F6, Facelet::R3], // FR
-    [Facelet::R3, Facelet::F6], // RF
-    [Facelet::B3, Facelet::R5], // BR
-    [Facelet::R5, Facelet::B3], // RB
-    [Facelet::B5, Facelet::L3], // BL
-    [Facelet::L3, Facelet::B5], // LB
-    [Facelet::D1, Facelet::F7], // DF
-    [Facelet::F7, Facelet::D1], // FD
-    [Facelet::D5, Facelet::R7], // DR
-    [Facelet::R7, Facelet::D5], // RD
-    [Facelet::D7, Facelet::B7], // DB
-    [Facelet::B7, Facelet::D7], // BD
-    [Facelet::D3, Facelet::L7], // DL
-    [Facelet::L7, Facelet::D3], // LD
-];
