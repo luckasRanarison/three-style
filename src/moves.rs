@@ -1,4 +1,6 @@
-use std::fmt;
+use std::{fmt, str::FromStr};
+
+use crate::error::Error;
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum MoveDirection {
@@ -51,13 +53,15 @@ impl fmt::Display for Move {
     }
 }
 
-impl Move {
-    pub fn from_str(s: &str) -> Option<Self> {
+impl FromStr for Move {
+    type Err = Error;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
         let direction = match s.get(1..2) {
-            Some("2") => MoveDirection::Double,
-            Some("'") => MoveDirection::Prime,
-            None => MoveDirection::Normal,
-            _ => return None,
+            Some("2") => Some(MoveDirection::Double),
+            Some("'") => Some(MoveDirection::Prime),
+            None => Some(MoveDirection::Normal),
+            _ => None,
         };
 
         let kind = match &s[0..1] {
@@ -82,37 +86,41 @@ impl Move {
             _ => None,
         };
 
-        kind.map(|kind| Move { kind, direction })
+        kind.zip(direction)
+            .ok_or(Error::InvalidMoveString(s.to_owned()))
+            .map(|(kind, direction)| Move { kind, direction })
     }
 }
 
-pub fn moves_from_str(s: &str) -> Option<Vec<Move>> {
+pub fn moves_from_str(s: &str) -> Result<Vec<Move>, Error> {
     s.split_whitespace().map(Move::from_str).collect()
 }
 
 #[cfg(test)]
 mod tests {
+    use std::str::FromStr;
+
     use crate::moves::{Move, MoveDirection, MoveKind};
 
     #[test]
     fn test_move_string() {
         assert_eq!(
             Move::from_str("R"),
-            Some(Move {
+            Ok(Move {
                 kind: MoveKind::R,
                 direction: MoveDirection::Normal
             })
         );
         assert_eq!(
             Move::from_str("R'"),
-            Some(Move {
+            Ok(Move {
                 kind: MoveKind::R,
                 direction: MoveDirection::Prime
             })
         );
         assert_eq!(
             Move::from_str("R2"),
-            Some(Move {
+            Ok(Move {
                 kind: MoveKind::R,
                 direction: MoveDirection::Double
             })
