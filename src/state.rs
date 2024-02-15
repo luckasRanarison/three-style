@@ -1,8 +1,10 @@
 use crate::{
+    error::Error,
     facelet::*,
     moves::{Move, MoveKind},
+    sticker::{CornerSticker, EdgeSticker},
 };
-use std::ops::Mul;
+use std::{collections::HashSet, ops::Mul};
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct Cube(FaceState);
@@ -84,6 +86,88 @@ impl Cube {
                 .fold(self, |acc, m| acc * m)
         } else {
             self
+        }
+    }
+}
+
+trait ThreeCycle: Sized {
+    fn edge_cycle(
+        self,
+        first: EdgeSticker,
+        second: EdgeSticker,
+        third: EdgeSticker,
+    ) -> Result<Self, Error>;
+    fn corner_cycle(
+        self,
+        first: CornerSticker,
+        second: CornerSticker,
+        third: CornerSticker,
+    ) -> Result<Self, Error>;
+}
+
+impl ThreeCycle for Cube {
+    fn edge_cycle(
+        self,
+        first: EdgeSticker,
+        second: EdgeSticker,
+        third: EdgeSticker,
+    ) -> Result<Self, Error> {
+        let mut res = self.clone();
+        let first_facelets = first.into_facelet();
+        let second_facelets = second.into_facelet();
+        let third_facelets = third.into_facelet();
+        let count = first_facelets
+            .iter()
+            .chain(second_facelets.iter())
+            .chain(third_facelets.iter())
+            .collect::<HashSet<_>>()
+            .len();
+
+        if count == 6 {
+            res.0[first_facelets[0] as usize] = self.0[third_facelets[0] as usize];
+            res.0[first_facelets[1] as usize] = self.0[third_facelets[1] as usize];
+            res.0[second_facelets[0] as usize] = self.0[first_facelets[0] as usize];
+            res.0[second_facelets[1] as usize] = self.0[first_facelets[1] as usize];
+            res.0[third_facelets[0] as usize] = self.0[second_facelets[0] as usize];
+            res.0[third_facelets[1] as usize] = self.0[second_facelets[1] as usize];
+
+            Ok(res)
+        } else {
+            Err(Error::InvalidEdgeCycle(first, second, third))
+        }
+    }
+
+    fn corner_cycle(
+        self,
+        first: CornerSticker,
+        second: CornerSticker,
+        third: CornerSticker,
+    ) -> Result<Self, Error> {
+        let mut res = self.clone();
+        let first_facelets = first.into_facelet();
+        let second_facelets = second.into_facelet();
+        let third_facelets = third.into_facelet();
+        let count = first_facelets
+            .iter()
+            .chain(second_facelets.iter())
+            .chain(third_facelets.iter())
+            .collect::<HashSet<_>>()
+            .len();
+
+        if count == 9 {
+            res.0[first_facelets[0] as usize] = self.0[third_facelets[0] as usize];
+            res.0[first_facelets[1] as usize] = self.0[third_facelets[1] as usize];
+            res.0[first_facelets[2] as usize] = self.0[third_facelets[2] as usize];
+            res.0[second_facelets[0] as usize] = self.0[first_facelets[0] as usize];
+            res.0[second_facelets[1] as usize] = self.0[first_facelets[1] as usize];
+            res.0[second_facelets[2] as usize] = self.0[first_facelets[2] as usize];
+            res.0[third_facelets[0] as usize] = self.0[second_facelets[0] as usize];
+            res.0[third_facelets[1] as usize] = self.0[second_facelets[1] as usize];
+            res.0[third_facelets[2] as usize] = self.0[second_facelets[2] as usize];
+
+            Ok(res)
+        } else {
+            Err(Error::InvalidCornerCycle(first, second, third))
         }
     }
 }
