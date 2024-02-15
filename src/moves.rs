@@ -1,122 +1,88 @@
 use std::fmt;
 
 #[derive(Debug, Clone, Copy, PartialEq)]
-pub enum MoveType {
+pub enum MoveDirection {
     Normal = 1,
     Double = 2,
     Prime = 3,
 }
 
-impl fmt::Display for MoveType {
+impl fmt::Display for MoveDirection {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            MoveType::Normal => write!(f, ""),
-            MoveType::Double => write!(f, "2"),
-            MoveType::Prime => write!(f, "'"),
+            MoveDirection::Normal => write!(f, ""),
+            MoveDirection::Double => write!(f, "2"),
+            MoveDirection::Prime => write!(f, "'"),
         }
     }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]
-pub enum Move {
-    U(MoveType),
-    F(MoveType),
-    R(MoveType),
-    B(MoveType),
-    L(MoveType),
-    D(MoveType),
-    M(MoveType),
-    S(MoveType),
-    E(MoveType),
-    X(MoveType),
-    Y(MoveType),
-    Z(MoveType),
-    Uw(MoveType),
-    Fw(MoveType),
-    Rw(MoveType),
-    Bw(MoveType),
-    Lw(MoveType),
-    Dw(MoveType),
+pub enum MoveKind {
+    U,
+    F,
+    R,
+    B,
+    L,
+    D,
+    M,
+    S,
+    E,
+    X,
+    Y,
+    Z,
+    Uw,
+    Fw,
+    Rw,
+    Bw,
+    Lw,
+    Dw,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct Move {
+    pub kind: MoveKind,
+    pub direction: MoveDirection,
 }
 
 impl fmt::Display for Move {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Move::U(t) => write!(f, "U{t}"),
-            Move::F(t) => write!(f, "F{t}"),
-            Move::R(t) => write!(f, "R{t}"),
-            Move::B(t) => write!(f, "B{t}"),
-            Move::L(t) => write!(f, "L{t}"),
-            Move::D(t) => write!(f, "D{t}"),
-            Move::M(t) => write!(f, "M{t}"),
-            Move::S(t) => write!(f, "S{t}"),
-            Move::E(t) => write!(f, "E{t}"),
-            Move::X(t) => write!(f, "x{t}"),
-            Move::Y(t) => write!(f, "y{t}"),
-            Move::Z(t) => write!(f, "z{t}"),
-            Move::Uw(t) => write!(f, "u{t}"),
-            Move::Fw(t) => write!(f, "f{t}"),
-            Move::Rw(t) => write!(f, "r{t}"),
-            Move::Bw(t) => write!(f, "b{t}"),
-            Move::Lw(t) => write!(f, "l{t}"),
-            Move::Dw(t) => write!(f, "d{t}"),
-        }
+        write!(f, "{:?}{}", self.kind, self.direction)
     }
 }
 
 impl Move {
     pub fn from_str(s: &str) -> Option<Self> {
-        let t = match s.get(1..2) {
-            Some("2") => MoveType::Double,
-            Some("'") => MoveType::Prime,
-            None => MoveType::Normal,
+        let direction = match s.get(1..2) {
+            Some("2") => MoveDirection::Double,
+            Some("'") => MoveDirection::Prime,
+            None => MoveDirection::Normal,
             _ => return None,
         };
 
-        match &s[0..1] {
-            "U" => Some(Move::U(t)),
-            "F" => Some(Move::F(t)),
-            "R" => Some(Move::R(t)),
-            "B" => Some(Move::B(t)),
-            "L" => Some(Move::L(t)),
-            "D" => Some(Move::D(t)),
-            "M" => Some(Move::M(t)),
-            "S" => Some(Move::S(t)),
-            "E" => Some(Move::E(t)),
-            "x" => Some(Move::X(t)),
-            "y" => Some(Move::Y(t)),
-            "z" => Some(Move::Z(t)),
-            "u" => Some(Move::Uw(t)),
-            "f" => Some(Move::Fw(t)),
-            "r" => Some(Move::Rw(t)),
-            "b" => Some(Move::Bw(t)),
-            "l" => Some(Move::Lw(t)),
-            "d" => Some(Move::Dw(t)),
+        let kind = match &s[0..1] {
+            "U" => Some(MoveKind::U),
+            "F" => Some(MoveKind::F),
+            "R" => Some(MoveKind::R),
+            "B" => Some(MoveKind::B),
+            "L" => Some(MoveKind::L),
+            "D" => Some(MoveKind::D),
+            "M" => Some(MoveKind::M),
+            "S" => Some(MoveKind::S),
+            "E" => Some(MoveKind::E),
+            "x" => Some(MoveKind::X),
+            "y" => Some(MoveKind::Y),
+            "z" => Some(MoveKind::Z),
+            "u" => Some(MoveKind::Uw),
+            "f" => Some(MoveKind::Fw),
+            "r" => Some(MoveKind::Rw),
+            "b" => Some(MoveKind::Bw),
+            "l" => Some(MoveKind::Lw),
+            "d" => Some(MoveKind::Dw),
             _ => None,
-        }
-    }
+        };
 
-    pub fn get_type(&self) -> MoveType {
-        match self {
-            Move::U(t)
-            | Move::F(t)
-            | Move::R(t)
-            | Move::B(t)
-            | Move::L(t)
-            | Move::D(t)
-            | Move::M(t)
-            | Move::S(t)
-            | Move::E(t)
-            | Move::X(t)
-            | Move::Y(t)
-            | Move::Z(t)
-            | Move::Uw(t)
-            | Move::Fw(t)
-            | Move::Rw(t)
-            | Move::Bw(t)
-            | Move::Lw(t)
-            | Move::Dw(t) => *t,
-        }
+        kind.map(|kind| Move { kind, direction })
     }
 }
 
@@ -126,16 +92,55 @@ pub fn moves_from_str(s: &str) -> Option<Vec<Move>> {
 
 #[cfg(test)]
 mod tests {
-    use crate::moves::{Move, MoveType};
+    use crate::moves::{Move, MoveDirection, MoveKind};
 
     #[test]
     fn test_move_string() {
-        assert_eq!(Move::from_str("R"), Some(Move::R(MoveType::Normal)));
-        assert_eq!(Move::from_str("R'"), Some(Move::R(MoveType::Prime)));
-        assert_eq!(Move::from_str("R2"), Some(Move::R(MoveType::Double)));
+        assert_eq!(
+            Move::from_str("R"),
+            Some(Move {
+                kind: MoveKind::R,
+                direction: MoveDirection::Normal
+            })
+        );
+        assert_eq!(
+            Move::from_str("R'"),
+            Some(Move {
+                kind: MoveKind::R,
+                direction: MoveDirection::Prime
+            })
+        );
+        assert_eq!(
+            Move::from_str("R2"),
+            Some(Move {
+                kind: MoveKind::R,
+                direction: MoveDirection::Double
+            })
+        );
 
-        assert_eq!(&Move::U(MoveType::Normal).to_string(), "U");
-        assert_eq!(&Move::U(MoveType::Prime).to_string(), "U'");
-        assert_eq!(&Move::U(MoveType::Double).to_string(), "U2");
+        assert_eq!(
+            &Move {
+                kind: MoveKind::U,
+                direction: MoveDirection::Normal
+            }
+            .to_string(),
+            "U"
+        );
+        assert_eq!(
+            &Move {
+                kind: MoveKind::U,
+                direction: MoveDirection::Prime
+            }
+            .to_string(),
+            "U'"
+        );
+        assert_eq!(
+            &Move {
+                kind: MoveKind::U,
+                direction: MoveDirection::Double
+            }
+            .to_string(),
+            "U2"
+        );
     }
 }

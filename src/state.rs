@@ -1,4 +1,7 @@
-use crate::{facelet::*, moves::Move};
+use crate::{
+    facelet::*,
+    moves::{Move, MoveKind},
+};
 use std::ops::Mul;
 
 #[derive(Debug, PartialEq, Clone)]
@@ -39,26 +42,26 @@ impl Mul<Cube> for Cube {
 
 impl From<Move> for Cube {
     fn from(m: Move) -> Self {
-        let count = m.get_type() as usize;
-        let move_state = match m {
-            Move::U(_) => U_CUBE,
-            Move::F(_) => F_CUBE,
-            Move::R(_) => R_CUBE,
-            Move::B(_) => B_CUBE,
-            Move::L(_) => L_CUBE,
-            Move::D(_) => D_CUBE,
-            Move::M(_) => M_CUBE,
-            Move::S(_) => S_CUBE,
-            Move::E(_) => E_CUBE,
-            Move::X(_) => X_CUBE,
-            Move::Y(_) => Y_CUBE,
-            Move::Z(_) => Z_CUBE,
-            Move::Fw(_) => F_CUBE * S_CUBE,
-            Move::Lw(_) => L_CUBE * M_CUBE,
-            Move::Dw(_) => D_CUBE * E_CUBE,
-            Move::Uw(_) => U_CUBE * E_CUBE.repeat(3),
-            Move::Rw(_) => R_CUBE * M_CUBE.repeat(3),
-            Move::Bw(_) => B_CUBE * S_CUBE.repeat(3),
+        let count = m.direction as usize;
+        let move_state = match m.kind {
+            MoveKind::U => U_CUBE,
+            MoveKind::F => F_CUBE,
+            MoveKind::R => R_CUBE,
+            MoveKind::B => B_CUBE,
+            MoveKind::L => L_CUBE,
+            MoveKind::D => D_CUBE,
+            MoveKind::M => M_CUBE,
+            MoveKind::S => S_CUBE,
+            MoveKind::E => E_CUBE,
+            MoveKind::X => X_CUBE,
+            MoveKind::Y => Y_CUBE,
+            MoveKind::Z => Z_CUBE,
+            MoveKind::Fw => F_CUBE * S_CUBE,
+            MoveKind::Lw => L_CUBE * M_CUBE,
+            MoveKind::Dw => D_CUBE * E_CUBE,
+            MoveKind::Uw => U_CUBE * E_CUBE.repeat(3),
+            MoveKind::Rw => R_CUBE * M_CUBE.repeat(3),
+            MoveKind::Bw => B_CUBE * S_CUBE.repeat(3),
         };
 
         move_state.repeat(count)
@@ -87,7 +90,7 @@ impl Cube {
 
 #[cfg(test)]
 mod tests {
-    use crate::{cube::Cube, facelet::Facelet as F, moves::moves_from_str};
+    use crate::{facelet::Facelet as F, moves::moves_from_str, state::Cube};
 
     fn cube_from_str(s: &str) -> Cube {
         let moves = moves_from_str(s).unwrap();
