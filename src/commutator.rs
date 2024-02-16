@@ -6,18 +6,26 @@ use crate::{
 use std::fmt;
 
 #[derive(Debug, Clone, PartialEq)]
-pub struct Cycle<T> {
+pub struct Cycle<T: Clone + Copy> {
     pub first: T,
     pub second: T,
     pub third: T,
 }
 
-impl<T> Cycle<T> {
+impl<T: Clone + Copy> Cycle<T> {
     pub fn new(first: T, second: T, third: T) -> Self {
         Self {
             first,
             second,
             third,
+        }
+    }
+
+    pub fn alt(&self) -> Self {
+        Self {
+            first: self.first,
+            second: self.third,
+            third: self.second,
         }
     }
 }

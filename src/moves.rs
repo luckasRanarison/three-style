@@ -54,6 +54,14 @@ impl MoveKind {
             _ => *self,
         }
     }
+
+    pub fn get_move_variants(&self) -> Vec<Move> {
+        vec![
+            Move::new(*self, MoveDirection::Normal),
+            Move::new(*self, MoveDirection::Prime),
+            Move::new(*self, MoveDirection::Double),
+        ]
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -63,11 +71,15 @@ pub struct Move {
 }
 
 impl Move {
+    fn new(kind: MoveKind, direction: MoveDirection) -> Self {
+        Move { kind, direction }
+    }
+
     pub fn inverse(&self) -> Self {
         let kind = self.kind;
         let direction = self.direction.inverse();
 
-        Move { kind, direction }
+        Move::new(kind, direction)
     }
 }
 
@@ -199,6 +211,18 @@ pub fn clean_moves(moves: Vec<Move>) -> Vec<Move> {
     result
 }
 
+pub fn find_parallel_moves(moves: &[MoveKind]) -> Option<(MoveKind, MoveKind)> {
+    for (i, m) in moves.iter().enumerate() {
+        for n in &moves[i..] {
+            if m.inverse() == *n {
+                return Some((*m, *n));
+            }
+        }
+    }
+
+    None
+}
+
 #[cfg(test)]
 mod tests {
     use super::moves_from_str;
@@ -209,48 +233,27 @@ mod tests {
     fn test_move_string() {
         assert_eq!(
             Move::from_str("R"),
-            Ok(Move {
-                kind: MoveKind::R,
-                direction: MoveDirection::Normal
-            })
+            Ok(Move::new(MoveKind::R, MoveDirection::Normal))
         );
         assert_eq!(
             Move::from_str("R'"),
-            Ok(Move {
-                kind: MoveKind::R,
-                direction: MoveDirection::Prime
-            })
+            Ok(Move::new(MoveKind::R, MoveDirection::Prime))
         );
         assert_eq!(
             Move::from_str("R2"),
-            Ok(Move {
-                kind: MoveKind::R,
-                direction: MoveDirection::Double
-            })
+            Ok(Move::new(MoveKind::R, MoveDirection::Double))
         );
 
         assert_eq!(
-            &Move {
-                kind: MoveKind::U,
-                direction: MoveDirection::Normal
-            }
-            .to_string(),
+            &Move::new(MoveKind::U, MoveDirection::Normal).to_string(),
             "U"
         );
         assert_eq!(
-            &Move {
-                kind: MoveKind::U,
-                direction: MoveDirection::Prime
-            }
-            .to_string(),
+            &Move::new(MoveKind::U, MoveDirection::Prime).to_string(),
             "U'"
         );
         assert_eq!(
-            &Move {
-                kind: MoveKind::U,
-                direction: MoveDirection::Double
-            }
-            .to_string(),
+            &Move::new(MoveKind::U, MoveDirection::Double).to_string(),
             "U2"
         );
     }
