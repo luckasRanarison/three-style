@@ -45,7 +45,7 @@ impl Commutator {
             .cloned()
             .collect();
 
-        clean_moves(&raw_moves)
+        clean_moves(raw_moves)
     }
 }
 

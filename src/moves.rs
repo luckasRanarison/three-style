@@ -1,5 +1,5 @@
 use crate::error::Error;
-use std::{fmt, ops::Add, str::FromStr};
+use std::{fmt, ops::Mul, str::FromStr};
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum MoveDirection {
@@ -71,27 +71,27 @@ impl Move {
     }
 }
 
-impl Add<Move> for Move {
-    type Output = Vec<Move>;
+impl Mul<Move> for Move {
+    type Output = Option<Move>;
 
-    fn add(self, rhs: Move) -> Self::Output {
+    fn mul(self, rhs: Move) -> Self::Output {
         if rhs.kind != self.kind {
-            return vec![self, rhs];
+            return None;
         }
 
         if self.direction == rhs.direction.inverse() {
-            return vec![];
+            return None;
         }
 
         let kind = self.kind;
         let count = self.direction as usize + rhs.direction as usize;
-        let direction = match count % 2 {
+        let direction = match count % 4 {
             2 => MoveDirection::Double,
             3 => MoveDirection::Prime,
             _ => MoveDirection::Normal,
         };
 
-        vec![Move { kind, direction }]
+        Some(Move { kind, direction })
     }
 }
 
@@ -156,8 +156,47 @@ pub fn reverse_moves(moves: &[Move]) -> Vec<Move> {
     moves.iter().rev().map(|m| m.inverse()).collect()
 }
 
-pub fn clean_moves(moves: &[Move]) -> Vec<Move> {
-    todo!()
+pub fn clean_moves(moves: Vec<Move>) -> Vec<Move> {
+    let mut primary: Option<Move> = None;
+    let mut secondary: Option<Move> = None;
+    let mut result: Vec<Move> = Vec::new();
+
+    for m in moves {
+        let p = match primary {
+            Some(p) => p,
+            None => {
+                primary = Some(m);
+                continue;
+            }
+        };
+
+        if m.kind == p.kind {
+            primary = p * m;
+        } else if m.kind == p.kind.inverse() {
+            if let Some(s) = secondary {
+                secondary = s * m;
+            } else {
+                secondary = Some(m);
+            }
+        } else {
+            if let Some(p) = primary.take() {
+                result.push(p);
+            }
+            if let Some(s) = secondary.take() {
+                result.push(s);
+            }
+            primary = Some(m);
+        }
+    }
+
+    if let Some(p) = primary.take() {
+        result.push(p);
+    }
+    if let Some(s) = secondary.take() {
+        result.push(s);
+    }
+
+    result
 }
 
 #[cfg(test)]
@@ -221,26 +260,26 @@ mod tests {
         let raw = moves_from_str("R U U").unwrap();
         let expected = moves_from_str("R U2").unwrap();
 
-        assert_eq!(expected, clean_moves(&raw));
+        assert_eq!(expected, clean_moves(raw));
 
         let raw = moves_from_str("R U2 U").unwrap();
         let expected = moves_from_str("R U'").unwrap();
 
-        assert_eq!(expected, clean_moves(&raw));
+        assert_eq!(expected, clean_moves(raw));
 
         let raw = moves_from_str("R U2 U2").unwrap();
         let expected = moves_from_str("R").unwrap();
 
-        assert_eq!(expected, clean_moves(&raw));
+        assert_eq!(expected, clean_moves(raw));
 
         let raw = moves_from_str("R U U'").unwrap();
         let expected = moves_from_str("R").unwrap();
 
-        assert_eq!(expected, clean_moves(&raw));
+        assert_eq!(expected, clean_moves(raw));
 
         let raw = moves_from_str("R U D U'").unwrap();
         let expected = moves_from_str("R D").unwrap();
 
-        assert_eq!(expected, clean_moves(&raw));
+        assert_eq!(expected, clean_moves(raw));
     }
 }
