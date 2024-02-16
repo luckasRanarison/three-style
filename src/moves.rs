@@ -1,6 +1,5 @@
-use std::{fmt, str::FromStr};
-
 use crate::error::Error;
+use std::{fmt, str::FromStr};
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum MoveDirection {
@@ -19,26 +18,12 @@ impl fmt::Display for MoveDirection {
     }
 }
 
+#[rustfmt::skip]
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum MoveKind {
-    U,
-    F,
-    R,
-    B,
-    L,
-    D,
-    M,
-    S,
-    E,
-    X,
-    Y,
-    Z,
-    Uw,
-    Fw,
-    Rw,
-    Bw,
-    Lw,
-    Dw,
+    U, F, R, B, L, D,
+    M, S, E, X, Y, Z,
+    Uw, Fw, Rw, Bw, Lw, Dw,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -98,9 +83,8 @@ pub fn moves_from_str(s: &str) -> Result<Vec<Move>, Error> {
 
 #[cfg(test)]
 mod tests {
-    use std::str::FromStr;
-
     use crate::moves::{Move, MoveDirection, MoveKind};
+    use std::str::FromStr;
 
     #[test]
     fn test_move_string() {

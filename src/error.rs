@@ -1,6 +1,5 @@
-use thiserror::Error;
-
 use crate::sticker::{Corner, Edge};
+use thiserror::Error;
 
 #[derive(Debug, Error, PartialEq)]
 pub enum Error {
