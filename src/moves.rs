@@ -1,11 +1,21 @@
 use crate::error::Error;
-use std::{fmt, str::FromStr};
+use std::{fmt, ops::Add, str::FromStr};
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum MoveDirection {
     Normal = 1,
     Double = 2,
     Prime = 3,
+}
+
+impl MoveDirection {
+    pub fn inverse(&self) -> Self {
+        match self {
+            MoveDirection::Normal => MoveDirection::Prime,
+            MoveDirection::Prime => MoveDirection::Normal,
+            _ => *self,
+        }
+    }
 }
 
 impl fmt::Display for MoveDirection {
@@ -26,15 +36,62 @@ pub enum MoveKind {
     Uw, Fw, Rw, Bw, Lw, Dw,
 }
 
+impl MoveKind {
+    pub fn inverse(&self) -> Self {
+        match self {
+            MoveKind::U => MoveKind::D,
+            MoveKind::F => MoveKind::B,
+            MoveKind::R => MoveKind::L,
+            MoveKind::B => MoveKind::F,
+            MoveKind::L => MoveKind::R,
+            MoveKind::D => MoveKind::U,
+            MoveKind::Uw => MoveKind::Dw,
+            MoveKind::Fw => MoveKind::Bw,
+            MoveKind::Rw => MoveKind::Lw,
+            MoveKind::Bw => MoveKind::Fw,
+            MoveKind::Lw => MoveKind::Rw,
+            MoveKind::Dw => MoveKind::Uw,
+            _ => *self,
+        }
+    }
+}
+
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Move {
     pub kind: MoveKind,
     pub direction: MoveDirection,
 }
 
-impl fmt::Display for Move {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{:?}{}", self.kind, self.direction)
+impl Move {
+    pub fn inverse(&self) -> Self {
+        let kind = self.kind;
+        let direction = self.direction.inverse();
+
+        Move { kind, direction }
+    }
+}
+
+impl Add<Move> for Move {
+    type Output = Vec<Move>;
+
+    fn add(self, rhs: Move) -> Self::Output {
+        if rhs.kind != self.kind {
+            return vec![self, rhs];
+        }
+
+        if self.direction == rhs.direction.inverse() {
+            return vec![];
+        }
+
+        let kind = self.kind;
+        let count = self.direction as usize + rhs.direction as usize;
+        let direction = match count % 2 {
+            2 => MoveDirection::Double,
+            3 => MoveDirection::Prime,
+            _ => MoveDirection::Normal,
+        };
+
+        vec![Move { kind, direction }]
     }
 }
 
@@ -77,13 +134,36 @@ impl FromStr for Move {
     }
 }
 
+impl fmt::Display for Move {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{:?}{}", self.kind, self.direction)
+    }
+}
+
 pub fn moves_from_str(s: &str) -> Result<Vec<Move>, Error> {
     s.split_whitespace().map(Move::from_str).collect()
 }
 
+pub fn format_moves(moves: &[Move]) -> String {
+    moves
+        .iter()
+        .map(|m| m.to_string())
+        .collect::<Vec<_>>()
+        .join(" ")
+}
+
+pub fn reverse_moves(moves: &[Move]) -> Vec<Move> {
+    moves.iter().rev().map(|m| m.inverse()).collect()
+}
+
+pub fn clean_moves(moves: &[Move]) -> Vec<Move> {
+    todo!()
+}
+
 #[cfg(test)]
 mod tests {
-    use crate::moves::{Move, MoveDirection, MoveKind};
+    use super::moves_from_str;
+    use crate::moves::{clean_moves, Move, MoveDirection, MoveKind};
     use std::str::FromStr;
 
     #[test]
@@ -134,5 +214,33 @@ mod tests {
             .to_string(),
             "U2"
         );
+    }
+
+    #[test]
+    fn test_move_cleanup() {
+        let raw = moves_from_str("R U U").unwrap();
+        let expected = moves_from_str("R U2").unwrap();
+
+        assert_eq!(expected, clean_moves(&raw));
+
+        let raw = moves_from_str("R U2 U").unwrap();
+        let expected = moves_from_str("R U'").unwrap();
+
+        assert_eq!(expected, clean_moves(&raw));
+
+        let raw = moves_from_str("R U2 U2").unwrap();
+        let expected = moves_from_str("R").unwrap();
+
+        assert_eq!(expected, clean_moves(&raw));
+
+        let raw = moves_from_str("R U U'").unwrap();
+        let expected = moves_from_str("R").unwrap();
+
+        assert_eq!(expected, clean_moves(&raw));
+
+        let raw = moves_from_str("R U D U'").unwrap();
+        let expected = moves_from_str("R D").unwrap();
+
+        assert_eq!(expected, clean_moves(&raw));
     }
 }

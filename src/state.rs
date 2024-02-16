@@ -1,4 +1,5 @@
 use crate::{
+    commutator::ThreeCycle,
     error::Error,
     facelet::*,
     moves::{Move, MoveKind},
@@ -88,11 +89,6 @@ impl Cube {
             self
         }
     }
-}
-
-trait ThreeCycle: Sized {
-    fn edge_cycle(self, first: Edge, second: Edge, third: Edge) -> Result<Self, Error>;
-    fn corner_cycle(self, first: Corner, second: Corner, third: Corner) -> Result<Self, Error>;
 }
 
 impl ThreeCycle for Cube {
