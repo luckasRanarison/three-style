@@ -1,5 +1,5 @@
 use crate::{
-    commutator::ThreeCycle,
+    commutator::{Cycle, ThreeCycle},
     error::Error,
     facelet::*,
     moves::{Move, MoveKind},
@@ -92,11 +92,11 @@ impl Cube {
 }
 
 impl ThreeCycle for Cube {
-    fn edge_cycle(self, first: Edge, second: Edge, third: Edge) -> Result<Self, Error> {
+    fn edge_cycle(self, cycle: Cycle<Edge>) -> Result<Self, Error> {
         let mut res = self.clone();
-        let first_facelets = first.into_facelet();
-        let second_facelets = second.into_facelet();
-        let third_facelets = third.into_facelet();
+        let first_facelets = cycle.first.into_facelet();
+        let second_facelets = cycle.second.into_facelet();
+        let third_facelets = cycle.third.into_facelet();
         let count = first_facelets
             .iter()
             .chain(second_facelets.iter())
@@ -114,15 +114,15 @@ impl ThreeCycle for Cube {
 
             Ok(res)
         } else {
-            Err(Error::InvalidEdgeCycle(first, second, third))
+            Err(Error::InvalidEdgeCycle(cycle))
         }
     }
 
-    fn corner_cycle(self, first: Corner, second: Corner, third: Corner) -> Result<Self, Error> {
+    fn corner_cycle(self, cycle: Cycle<Corner>) -> Result<Self, Error> {
         let mut res = self.clone();
-        let first_facelets = first.into_facelet();
-        let second_facelets = second.into_facelet();
-        let third_facelets = third.into_facelet();
+        let first_facelets = cycle.first.into_facelet();
+        let second_facelets = cycle.second.into_facelet();
+        let third_facelets = cycle.third.into_facelet();
         let count = first_facelets
             .iter()
             .chain(second_facelets.iter())
@@ -143,7 +143,7 @@ impl ThreeCycle for Cube {
 
             Ok(res)
         } else {
-            Err(Error::InvalidCornerCycle(first, second, third))
+            Err(Error::InvalidCornerCycle(cycle))
         }
     }
 }
@@ -152,6 +152,7 @@ impl ThreeCycle for Cube {
 mod tests {
     use super::ThreeCycle;
     use crate::{
+        commutator::Cycle,
         facelet::Facelet as F,
         moves::moves_from_str,
         state::Cube,
@@ -225,7 +226,7 @@ mod tests {
     #[test]
     fn test_edge_cycle() {
         let cube = Cube::default()
-            .edge_cycle(Edge::UF, Edge::UB, Edge::FL)
+            .edge_cycle(Cycle::new(Edge::UF, Edge::UB, Edge::FL))
             .unwrap();
 
         #[rustfmt::skip]
@@ -240,7 +241,9 @@ mod tests {
 
         assert_eq!(expecte, cube);
 
-        let cube = cube.edge_cycle(Edge::UF, Edge::FL, Edge::UB).unwrap();
+        let cube = cube
+            .edge_cycle(Cycle::new(Edge::UF, Edge::FL, Edge::UB))
+            .unwrap();
 
         assert_eq!(Cube::default(), cube);
     }
@@ -248,7 +251,7 @@ mod tests {
     #[test]
     fn test_corner_cycle() {
         let cube = Cube::default()
-            .corner_cycle(Corner::UFR, Corner::ULF, Corner::RFD)
+            .corner_cycle(Cycle::new(Corner::UFR, Corner::ULF, Corner::RFD))
             .unwrap();
 
         #[rustfmt::skip]
@@ -264,7 +267,7 @@ mod tests {
         assert_eq!(expecte, cube);
 
         let cube = cube
-            .corner_cycle(Corner::UFR, Corner::RFD, Corner::ULF)
+            .corner_cycle(Cycle::new(Corner::UFR, Corner::RFD, Corner::ULF))
             .unwrap();
 
         assert_eq!(Cube::default(), cube);

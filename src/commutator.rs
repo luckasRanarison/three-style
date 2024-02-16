@@ -5,9 +5,26 @@ use crate::{
 };
 use std::fmt;
 
+#[derive(Debug, Clone, PartialEq)]
+pub struct Cycle<T> {
+    pub first: T,
+    pub second: T,
+    pub third: T,
+}
+
+impl<T> Cycle<T> {
+    pub fn new(first: T, second: T, third: T) -> Self {
+        Self {
+            first,
+            second,
+            third,
+        }
+    }
+}
+
 pub trait ThreeCycle: Sized {
-    fn edge_cycle(self, first: Edge, second: Edge, third: Edge) -> Result<Self, Error>;
-    fn corner_cycle(self, first: Corner, second: Corner, third: Corner) -> Result<Self, Error>;
+    fn edge_cycle(self, cycle: Cycle<Edge>) -> Result<Self, Error>;
+    fn corner_cycle(self, cycle: Cycle<Corner>) -> Result<Self, Error>;
 }
 
 #[derive(Debug, Clone, PartialEq)]
