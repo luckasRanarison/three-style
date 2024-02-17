@@ -62,6 +62,13 @@ impl MoveKind {
             Move::new(*self, MoveDirection::Double),
         ]
     }
+
+    pub fn is_side(&self) -> bool {
+        matches!(
+            self,
+            MoveKind::U | MoveKind::F | MoveKind::R | MoveKind::B | MoveKind::L | MoveKind::D
+        )
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -212,8 +219,14 @@ pub fn clean_moves(moves: Vec<Move>) -> Vec<Move> {
 }
 
 pub fn find_parallel_moves(moves: &[MoveKind]) -> Option<(MoveKind, MoveKind)> {
-    for (i, m) in moves.iter().enumerate() {
-        for n in &moves[i..] {
+    let filtered = moves
+        .iter()
+        .filter(|m| m.is_side())
+        .cloned()
+        .collect::<Vec<_>>();
+
+    for (i, m) in filtered.iter().enumerate() {
+        for n in &filtered[i..] {
             if m.inverse() == *n {
                 return Some((*m, *n));
             }

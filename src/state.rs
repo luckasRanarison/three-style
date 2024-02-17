@@ -32,11 +32,11 @@ impl Default for Cube {
     }
 }
 
-impl Index<Facelet> for Cube {
+impl Index<&Facelet> for Cube {
     type Output = Facelet;
 
-    fn index(&self, index: Facelet) -> &Self::Output {
-        &self.0[index as usize]
+    fn index(&self, index: &Facelet) -> &Self::Output {
+        &self.0[*index as usize]
     }
 }
 
@@ -89,6 +89,10 @@ impl Cube {
 
     pub fn apply_moves(self, moves: &[Move]) -> Self {
         moves.iter().fold(self, |acc, m| acc.apply_move(*m))
+    }
+
+    pub fn is_solved(&self) -> bool {
+        *self == Cube::default()
     }
 
     fn repeat(self, count: usize) -> Self {

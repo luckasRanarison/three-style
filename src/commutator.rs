@@ -2,6 +2,7 @@ use crate::{
     error::Error,
     facelet::{Facelet, FaceletTarget},
     moves::{clean_moves, format_moves, reverse_moves, Move},
+    state::Cube,
     sticker::{Corner, Edge},
 };
 use std::fmt;
@@ -36,16 +37,12 @@ where
         }
     }
 
-    pub fn first_facelet(&self) -> Facelet {
-        self.first.as_facelet()
-    }
-
-    pub fn second_facelet(&self) -> Facelet {
-        self.second.as_facelet()
-    }
-
-    pub fn third_facelet(&self) -> Facelet {
-        self.third.as_facelet()
+    pub fn to_facelets(&self) -> [Facelet; 3] {
+        [
+            self.first.as_facelet(),
+            self.second.as_facelet(),
+            self.third.as_facelet(),
+        ]
     }
 }
 
@@ -65,6 +62,10 @@ pub struct Commutator {
 impl Commutator {
     pub fn is_pure(&self) -> bool {
         self.setup.is_none()
+    }
+
+    pub fn solve(&self, state: Cube) -> bool {
+        state.apply_moves(&self.expand()).is_solved()
     }
 
     pub fn expand(&self) -> Vec<Move> {
