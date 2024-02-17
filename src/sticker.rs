@@ -1,4 +1,7 @@
-use crate::{error::Error, facelet::Facelet};
+use crate::{
+    error::Error,
+    facelet::{Facelet, FaceletTarget},
+};
 use std::str::FromStr;
 
 const CORNER_FACELET_MAP: [[Facelet; 3]; 24] = [
@@ -68,9 +71,9 @@ pub enum Corner {
     DLB, LBD, BDL,
 }
 
-impl Corner {
-    pub fn into_facelet(self) -> [Facelet; 3] {
-        CORNER_FACELET_MAP[self as usize]
+impl FaceletTarget for Corner {
+    fn into_facelets(self) -> Vec<Facelet> {
+        CORNER_FACELET_MAP[self as usize].to_vec()
     }
 }
 
@@ -125,9 +128,9 @@ pub enum Edge {
     DL, LD,
 }
 
-impl Edge {
-    pub fn into_facelet(self) -> [Facelet; 2] {
-        EDGE_FACELET_MAP[self as usize]
+impl FaceletTarget for Edge {
+    fn into_facelets(self) -> Vec<Facelet> {
+        EDGE_FACELET_MAP[self as usize].to_vec()
     }
 }
 

@@ -1,5 +1,8 @@
+use std::collections::HashMap;
+
 use crate::{
     commutator::{Commutator, Cycle, ThreeCycle},
+    facelet::Facelet,
     moves::{find_parallel_moves, Move, MoveKind},
     state::Cube,
     sticker::{Corner, Edge},
@@ -9,40 +12,66 @@ pub fn find_corner_commutator(
     cycle: Cycle<Corner>,
     allowed_moves: &[MoveKind],
     max_depth: u8,
-) -> Option<Vec<Commutator>> {
-    let initial_state = Cube::default().corner_cycle(cycle.alt()).ok()?;
-    let parallel_moves = find_parallel_moves(&allowed_moves)?;
+) -> Vec<Commutator> {
+    let finder = CornerCommutatorFinder::new(cycle, allowed_moves, max_depth);
 
-    let finder = CornerCommutatorFinder {
-        initial_state,
-        cycle,
-        parallel_moves,
-        max_depth,
-        moves: allowed_moves.to_vec(),
-        results: Vec::new(),
-    };
-
-    finder.search()
+    if let Some(finder) = finder {
+        finder.search()
+    } else {
+        Vec::new()
+    }
 }
 
 struct CornerCommutatorFinder {
-    initial_state: Cube,
     cycle: Cycle<Corner>,
-    moves: Vec<MoveKind>,
+    initial_state: Cube,
+    positions: HashMap<Facelet, Facelet>,
+    allowed_moves: Vec<MoveKind>,
     parallel_moves: (MoveKind, MoveKind),
+    current_moves: Vec<Move>,
     max_depth: u8,
     results: Vec<Commutator>,
 }
 
 impl CornerCommutatorFinder {
-    fn search(mut self) -> Option<Vec<Commutator>> {
-        todo!();
+    fn new(cycle: Cycle<Corner>, allowed_moves: &[MoveKind], max_depth: u8) -> Option<Self> {
+        let parallel_moves = find_parallel_moves(&allowed_moves)?;
+        let initial_state = Cube::default().corner_cycle(cycle.alt()).ok()?;
+        let mut positions = HashMap::new();
+        positions.insert(cycle.first_facelet(), initial_state[cycle.third_facelet()]);
+        positions.insert(cycle.second_facelet(), initial_state[cycle.first_facelet()]);
+        positions.insert(cycle.third_facelet(), initial_state[cycle.second_facelet()]);
 
-        if !self.results.is_empty() {
-            Some(self.results)
-        } else {
-            None
+        Some(Self {
+            cycle,
+            initial_state,
+            positions,
+            parallel_moves,
+            max_depth,
+            allowed_moves: allowed_moves.to_vec(),
+            current_moves: Vec::new(),
+            results: Vec::new(),
+        })
+    }
+
+    fn search(mut self) -> Vec<Commutator> {
+        let initial_state = self.initial_state.clone();
+        let (move_a, move_b) = self.parallel_moves;
+        let interchange_moves = move_a
+            .get_move_variants()
+            .into_iter()
+            .chain(move_b.get_move_variants().into_iter())
+            .collect::<Vec<_>>();
+        self.find_corner_interchange(initial_state, &interchange_moves, 0);
+        self.results
+    }
+
+    fn find_corner_interchange(&mut self, state: Cube, allowed_moves: &[Move], depth: u8) {
+        if depth == self.max_depth {
+            return;
         }
+
+        for m in allowed_moves {}
     }
 }
 
@@ -50,6 +79,6 @@ pub fn find_edge_commutator(
     cycle: Cycle<Edge>,
     allowed_moves: &[MoveKind],
     max_depth: u8,
-) -> Option<Vec<Commutator>> {
+) -> Vec<Commutator> {
     todo!()
 }

@@ -19,6 +19,13 @@ pub enum Color {
     D,
 }
 
+pub trait FaceletTarget: Sized {
+    fn into_facelets(self) -> Vec<Facelet>;
+    fn as_facelet(self) -> Facelet {
+        self.into_facelets()[0]
+    }
+}
+
 pub type FaceState = [Facelet; 54];
 
 use Facelet as F;

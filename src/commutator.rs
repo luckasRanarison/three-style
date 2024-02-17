@@ -1,18 +1,25 @@
 use crate::{
     error::Error,
+    facelet::{Facelet, FaceletTarget},
     moves::{clean_moves, format_moves, reverse_moves, Move},
     sticker::{Corner, Edge},
 };
 use std::fmt;
 
 #[derive(Debug, Clone, PartialEq)]
-pub struct Cycle<T: Clone + Copy> {
+pub struct Cycle<T>
+where
+    T: Clone + Copy + FaceletTarget,
+{
     pub first: T,
     pub second: T,
     pub third: T,
 }
 
-impl<T: Clone + Copy> Cycle<T> {
+impl<T> Cycle<T>
+where
+    T: Clone + Copy + FaceletTarget,
+{
     pub fn new(first: T, second: T, third: T) -> Self {
         Self {
             first,
@@ -27,6 +34,18 @@ impl<T: Clone + Copy> Cycle<T> {
             second: self.third,
             third: self.second,
         }
+    }
+
+    pub fn first_facelet(&self) -> Facelet {
+        self.first.as_facelet()
+    }
+
+    pub fn second_facelet(&self) -> Facelet {
+        self.second.as_facelet()
+    }
+
+    pub fn third_facelet(&self) -> Facelet {
+        self.third.as_facelet()
     }
 }
 

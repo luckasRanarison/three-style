@@ -5,7 +5,10 @@ use crate::{
     moves::{Move, MoveKind},
     sticker::{Corner, Edge},
 };
-use std::{collections::HashSet, ops::Mul};
+use std::{
+    collections::HashSet,
+    ops::{Index, Mul},
+};
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct Cube(FaceState);
@@ -26,6 +29,14 @@ const Z_CUBE: Cube = Cube(Z_STATE);
 impl Default for Cube {
     fn default() -> Self {
         Self(SOLVED_STATE)
+    }
+}
+
+impl Index<Facelet> for Cube {
+    type Output = Facelet;
+
+    fn index(&self, index: Facelet) -> &Self::Output {
+        &self.0[index as usize]
     }
 }
 
@@ -94,9 +105,9 @@ impl Cube {
 impl ThreeCycle for Cube {
     fn edge_cycle(self, cycle: Cycle<Edge>) -> Result<Self, Error> {
         let mut res = self.clone();
-        let first_facelets = cycle.first.into_facelet();
-        let second_facelets = cycle.second.into_facelet();
-        let third_facelets = cycle.third.into_facelet();
+        let first_facelets = cycle.first.into_facelets();
+        let second_facelets = cycle.second.into_facelets();
+        let third_facelets = cycle.third.into_facelets();
         let count = first_facelets
             .iter()
             .chain(second_facelets.iter())
@@ -120,9 +131,9 @@ impl ThreeCycle for Cube {
 
     fn corner_cycle(self, cycle: Cycle<Corner>) -> Result<Self, Error> {
         let mut res = self.clone();
-        let first_facelets = cycle.first.into_facelet();
-        let second_facelets = cycle.second.into_facelet();
-        let third_facelets = cycle.third.into_facelet();
+        let first_facelets = cycle.first.into_facelets();
+        let second_facelets = cycle.second.into_facelets();
+        let third_facelets = cycle.third.into_facelets();
         let count = first_facelets
             .iter()
             .chain(second_facelets.iter())
