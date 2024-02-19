@@ -25,30 +25,8 @@ impl Alg {
         todo!()
     }
 
-    pub fn iter(&self) -> MoveIterator {
-        MoveIterator {
-            alg: self,
-            index: 0,
-        }
-    }
-}
-
-#[derive(Debug)]
-pub struct MoveIterator<'a> {
-    alg: &'a Alg,
-    index: usize,
-}
-
-impl<'a> Iterator for MoveIterator<'a> {
-    type Item = &'a Move;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        if let Some(m) = self.alg.moves.get(self.index) {
-            self.index += 1;
-            Some(m)
-        } else {
-            None
-        }
+    pub fn iter(&self) -> impl Iterator<Item = &Move> {
+        self.moves.iter()
     }
 }
 

@@ -1,9 +1,8 @@
-use thiserror::Error;
-
 use crate::{
     commutator::types::Cycle,
     sticker::{Corner, Edge},
 };
+use thiserror::Error;
 
 #[derive(Debug, PartialEq, Clone, Error)]
 pub enum Error {
