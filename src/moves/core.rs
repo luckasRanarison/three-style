@@ -41,6 +41,14 @@ impl MoveKind {
             Self::Uw | Self::Rw | Self::Fw | Self::Dw | Self::Lw | Self::Bw
         )
     }
+
+    pub fn to_moves(&self) -> [Move; 3] {
+        [
+            Move::new(*self, MoveCount::Simple),
+            Move::new(*self, MoveCount::Double),
+            Move::new(*self, MoveCount::Prime),
+        ]
+    }
 }
 
 impl Inverse for MoveKind {

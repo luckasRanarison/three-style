@@ -78,6 +78,22 @@ impl From<Move> for FaceletCube {
     }
 }
 
+impl TryFrom<Cycle<Corner>> for FaceletCube {
+    type Error = Error;
+
+    fn try_from(value: Cycle<Corner>) -> Result<Self, Self::Error> {
+        FaceletCube::default().corner_cycle(value)
+    }
+}
+
+impl TryFrom<Cycle<Edge>> for FaceletCube {
+    type Error = Error;
+
+    fn try_from(value: Cycle<Edge>) -> Result<Self, Self::Error> {
+        FaceletCube::default().edge_cycle(value)
+    }
+}
+
 impl IntoIterator for FaceletCube {
     type Item = F;
     type IntoIter = std::array::IntoIter<F, 54>;
