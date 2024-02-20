@@ -1,14 +1,15 @@
 use super::types::{Commutator, Cycle};
 use crate::{
     facelet::{moves::FaceletPermutation, Facelet, FaceletCube},
-    moves::{Alg, Inverse, Move, MoveKind},
+    moves::{Alg, Inverse, Move, MoveCount, MoveKind},
     sticker::Corner,
 };
 
 #[derive(Debug, PartialEq, Clone)]
 struct Slot {
-    original: Facelet,
-    current: Facelet,
+    initial_value: Facelet,
+    position: Facelet,
+    value: Facelet,
 }
 
 pub fn find_corner_commutator(
@@ -31,8 +32,9 @@ pub fn find_corner_commutator(
         .to_facelets()
         .into_iter()
         .map(|f| Slot {
-            original: f,
-            current: initial_state[f],
+            initial_value: f,
+            position: f,
+            value: initial_state[f],
         })
         .collect();
     let allowed_moves = allowed_moves
@@ -105,21 +107,24 @@ impl CornerFinder {
             }
         }
 
-        self.find_setup_moves(state, interchange_moves, allowed_moves, depth + 1);
+        self.find_setup_moves(state, interchange_moves, allowed_moves, depth);
     }
 
     fn check_interchange(&self, state: &FaceletCube) -> Option<(Slot, Slot)> {
         for slot in &self.slots {
-            let current = state[slot.original];
+            let current = state[slot.position];
 
-            if slot.current != current && self.inside_cycle(current) {
+            if slot.value != current && self.inside_cycle(current) {
                 let source = self
                     .slots
                     .iter()
-                    .find(|s| s.current != slot.current && s.current != current)
-                    .cloned(); // sticker outside the interchange
+                    .find(|s| s.value != slot.value && s.value != current)
+                    .cloned()
+                    .unwrap(); // sticker outside the interchange
 
-                return source.map(|source| (source, slot.clone()));
+                if state[source.position] == source.value {
+                    return Some((source, slot.clone()));
+                }
             }
         }
 
@@ -139,7 +144,9 @@ impl CornerFinder {
             return;
         }
 
-        let wrapper_moves = allowed_moves.iter().filter(|m| m.kind != interchange.kind);
+        let wrapper_moves = allowed_moves
+            .iter()
+            .filter(|m| m.kind != interchange.kind && m.count != MoveCount::Double);
         let second_moves = interchange.kind.inverse().to_moves();
 
         for wm in wrapper_moves {
@@ -149,7 +156,7 @@ impl CornerFinder {
                 let second = first.clone().apply_move(*sm);
                 let last = second.apply_move(wm.inverse());
 
-                if last[target.original] == source.current {
+                if last[target.position] == source.value {
                     let insertion = Alg::new([*wm, *sm, wm.inverse()]);
                     self.add_commutator(interchange, insertion, source.clone(), target.clone());
                 }
@@ -190,7 +197,7 @@ impl CornerFinder {
             true => Some(Alg::new(self.current_moves.clone())),
             false => None,
         };
-        let insertion_first = target.original == source.current;
+        let insertion_first = target.initial_value == source.value;
         let commutator = Commutator {
             setup,
             interchange,
@@ -206,14 +213,14 @@ impl CornerFinder {
         let permutation = FaceletPermutation::from(m);
 
         for slot in self.slots.iter_mut() {
-            slot.original = permutation[slot.original];
+            slot.position = permutation[slot.position];
         }
 
         prev
     }
 
     fn inside_cycle(&self, facelet: Facelet) -> bool {
-        self.slots.iter().find(|s| s.original == facelet).is_some()
+        self.slots.iter().find(|s| s.value == facelet).is_some()
     }
 }
 
