@@ -105,9 +105,11 @@ impl fmt::Display for Alg {
 
 #[macro_export]
 macro_rules! alg {
-    ($moves: expr) => {
+    ($moves: expr) => {{
+        use std::str::FromStr;
+        use $crate::moves::Alg;
         Alg::from_str($moves).unwrap()
-    };
+    }};
 }
 
 #[cfg(test)]

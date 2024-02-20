@@ -6,7 +6,7 @@ pub trait Inverse {
 }
 
 #[rustfmt::skip]
-#[derive(Debug, PartialEq, Clone, Copy)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy, Hash)]
 pub enum MoveKind {
     U, R, F, D, L, B,
     X, Y, Z, M, E, S,
@@ -48,6 +48,15 @@ impl MoveKind {
             Move::new(*self, MoveCount::Double),
             Move::new(*self, MoveCount::Prime),
         ]
+    }
+
+    pub fn is_parallel(self, other: MoveKind) -> bool {
+        match (self, other) {
+            (MoveKind::U | MoveKind::D, MoveKind::E)
+            | (MoveKind::L | MoveKind::R, MoveKind::M)
+            | (MoveKind::F | MoveKind::B, MoveKind::S) => true,
+            _ => self.inverse() == other,
+        }
     }
 }
 
