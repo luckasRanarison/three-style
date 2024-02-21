@@ -6,6 +6,7 @@ use crate::{
 use std::fmt;
 
 #[derive(Debug, Clone, PartialEq)]
+#[allow(clippy::len_without_is_empty)]
 pub struct Commutator {
     pub setup: Option<Alg>,
     pub interchange: Move,
@@ -16,6 +17,10 @@ pub struct Commutator {
 impl Commutator {
     pub fn is_pure(&self) -> bool {
         self.setup.is_none()
+    }
+
+    pub fn len(&self) -> usize {
+        self.setup.as_ref().map_or(0, |s| s.len()) + self.insertion.len() + 1
     }
 
     pub fn expand(&self) -> Alg {
@@ -46,7 +51,7 @@ impl fmt::Display for Commutator {
         let start = self
             .setup
             .as_ref()
-            .map(|s| format!("[{}: ", s.to_string()))
+            .map(|s| format!("[{}: ", s))
             .unwrap_or_default();
         let end = if self.setup.is_some() { "]" } else { "" };
 

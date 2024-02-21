@@ -37,7 +37,7 @@ impl SearchParams {
             .collect();
 
         let allowed_moves = allowed_moves
-            .into_iter()
+            .iter()
             .flat_map(MoveKind::to_moves)
             .collect::<Vec<_>>();
 
@@ -71,7 +71,7 @@ impl SearchParams {
     }
 
     fn inside_cycle(&self, facelet: Facelet) -> bool {
-        self.slots.iter().find(|s| s.value == facelet).is_some()
+        self.slots.iter().any(|s| s.value == facelet)
     }
 
     fn get_remaining_slot(&self, first: Facelet, second: Facelet) -> Slot {
@@ -163,7 +163,7 @@ impl CommutatorFinder {
         interchange: Move,
         insertion: (Slot, Slot),
     ) {
-        let (source, target) = insertion.clone();
+        let (source, target) = insertion;
         let wrapper_moves = params
             .allowed_moves
             .iter()

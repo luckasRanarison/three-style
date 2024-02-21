@@ -11,8 +11,8 @@ pub const EDGE_FACELET_MAP: [[Facelet; 2]; 24] = [
     [Facelet::L1, Facelet::U3], // LU
     [Facelet::F3, Facelet::L5], // FL
     [Facelet::L5, Facelet::F3], // LF
-    [Facelet::F6, Facelet::R3], // FR
-    [Facelet::R3, Facelet::F6], // RF
+    [Facelet::F5, Facelet::R3], // FR
+    [Facelet::R3, Facelet::F5], // RF
     [Facelet::B3, Facelet::R5], // BR
     [Facelet::R5, Facelet::B3], // RB
     [Facelet::B5, Facelet::L3], // BL
