@@ -50,12 +50,15 @@ impl MoveKind {
         ]
     }
 
-    pub fn is_parallel(self, other: MoveKind) -> bool {
-        match (self, other) {
-            (MoveKind::U | MoveKind::D, MoveKind::E)
-            | (MoveKind::L | MoveKind::R, MoveKind::M)
-            | (MoveKind::F | MoveKind::B, MoveKind::S) => true,
-            _ => self.inverse() == other,
+    pub fn parallel(&self) -> Vec<MoveKind> {
+        match self {
+            MoveKind::E => vec![MoveKind::U, MoveKind::D],
+            MoveKind::M => vec![MoveKind::R, MoveKind::L],
+            MoveKind::S => vec![MoveKind::F, MoveKind::B],
+            MoveKind::U | MoveKind::D => vec![self.inverse(), MoveKind::E],
+            MoveKind::R | MoveKind::L => vec![self.inverse(), MoveKind::M],
+            MoveKind::F | MoveKind::B => vec![self.inverse(), MoveKind::S],
+            _ => vec![self.inverse()],
         }
     }
 }

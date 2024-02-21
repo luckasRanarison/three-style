@@ -163,7 +163,12 @@ impl CommutatorFinder {
             .allowed_moves
             .iter()
             .filter(|m| m.kind != interchange.kind && m.count != MoveCount::Double);
-        let second_moves = interchange.kind.inverse().to_moves();
+        let second_moves = interchange
+            .kind
+            .parallel()
+            .into_iter()
+            .flat_map(|m| m.to_moves().into_iter())
+            .collect::<Vec<_>>();
 
         for wm in wrapper_moves {
             let first = params.state.clone().apply_move(*wm);
@@ -216,7 +221,9 @@ fn find_parallel_moves(allowed_moves: &[MoveKind]) -> HashSet<MoveKind> {
 
     for (i, &m) in allowed_moves.iter().enumerate() {
         for &n in allowed_moves.iter().skip(i + 1) {
-            if m.is_parallel(n) {
+            let parallel = m.parallel().into_iter().find(|&p| p == n).is_some();
+
+            if parallel {
                 results.insert(m);
                 results.insert(n);
             }
@@ -248,7 +255,16 @@ pub fn find_edge_commutators(
     allowed_moves: &[MoveKind],
     max_depth: u8,
 ) -> Vec<Commutator> {
-    todo!()
+    let initial_state = FaceletCube::try_from(cycle.inverse());
+
+    initial_state
+        .map(|state| {
+            let finder = CommutatorFinder::new(max_depth);
+            let params = SearchParams::new(cycle, state, allowed_moves);
+
+            finder.search(params)
+        })
+        .unwrap_or_default()
 }
 
 #[cfg(test)]
