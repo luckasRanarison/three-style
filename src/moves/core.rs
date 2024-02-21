@@ -1,5 +1,5 @@
 use crate::error::Error;
-use std::{fmt, ops::BitAnd, str::FromStr};
+use std::{fmt, ops::Mul, str::FromStr};
 
 pub trait Inverse {
     fn inverse(&self) -> Self;
@@ -128,10 +128,10 @@ impl Inverse for Move {
     }
 }
 
-impl BitAnd<Move> for Move {
+impl Mul<Move> for Move {
     type Output = Option<Move>;
 
-    fn bitand(self, rhs: Move) -> Self::Output {
+    fn mul(self, rhs: Move) -> Self::Output {
         if rhs.kind != self.kind {
             return None;
         }

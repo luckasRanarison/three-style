@@ -25,12 +25,43 @@ impl Alg {
         self.len() == 0
     }
 
-    pub fn clean(&mut self) {
-        todo!()
-    }
-
     pub fn iter(&self) -> impl Iterator<Item = &Move> {
         self.moves.iter()
+    }
+
+    pub fn clean(self) -> Self {
+        let mut groups: Vec<Vec<Move>> = Vec::new();
+
+        for m in self.moves {
+            if let Some(group) = groups.last_mut() {
+                let last = group.last().unwrap();
+
+                if m.kind == last.kind || last.kind.inverse() == m.kind {
+                    group.push(m);
+                } else {
+                    groups.push(vec![m]);
+                }
+            } else {
+                groups.push(vec![m]);
+            }
+        }
+
+        let results = groups.into_iter().flat_map(|group| {
+            let first = group.first().unwrap();
+            let (first, second): (Vec<Move>, Vec<Move>) =
+                group.iter().partition(|m| m.kind == first.kind);
+            let first = first.into_iter().fold(None, |acc, m| match acc {
+                Some(acc) => acc * m,
+                None => Some(m),
+            });
+            let second = second.into_iter().fold(None, |acc, m| match acc {
+                Some(acc) => acc * m,
+                None => Some(m),
+            });
+            [first, second].into_iter().flatten()
+        });
+
+        Alg::new(results)
     }
 }
 
@@ -149,5 +180,20 @@ mod tests {
                 ]
             }
         );
+    }
+
+    #[test]
+    fn test_move_cancelation() {
+        let alg = alg!("U D2 D U'").clean();
+        let expected = alg!("D'");
+        assert_eq!(expected, alg);
+
+        let alg = alg!("R U R' U D' U2").clean();
+        let expected = alg!("R U R' U' D''");
+        assert_eq!(expected, alg);
+
+        let alg = alg!("U2 U2 D D' R").clean();
+        let expected = alg!("R");
+        assert_eq!(expected, alg);
     }
 }

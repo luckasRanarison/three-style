@@ -228,7 +228,7 @@ impl CommutatorFinder {
 
     fn add_commutator(&mut self, interchange: Move, insertion: Alg, insertion_first: bool) {
         let setup = match !self.current_moves.is_empty() {
-            true => Some(Alg::new(self.current_moves.clone())),
+            true => Some(Alg::new(self.current_moves.clone()).clean()),
             false => None,
         };
         let commutator = Commutator {

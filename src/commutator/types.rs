@@ -30,12 +30,13 @@ impl Commutator {
         } else {
             (&interchange, &self.insertion)
         };
+        let middle = first + second + first.inverse() + second.inverse();
+        let alg = match &self.setup {
+            Some(setup) => setup + &middle + setup.inverse(),
+            _ => middle,
+        };
 
-        if let Some(setup) = &self.setup {
-            setup + first + second + first.inverse() + second.inverse() + setup.inverse()
-        } else {
-            first + second + first.inverse() + second.inverse()
-        }
+        alg.clean()
     }
 }
 
