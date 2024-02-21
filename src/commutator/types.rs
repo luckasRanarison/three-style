@@ -2,7 +2,6 @@ use crate::{
     error::Error,
     facelet::{Facelet, FaceletTarget},
     moves::{Alg, Inverse, Move},
-    sticker::{Corner, Edge},
 };
 use std::fmt;
 
@@ -103,18 +102,25 @@ where
     }
 }
 
+impl<T> fmt::Display for Cycle<T>
+where
+    T: Clone + Copy + fmt::Display,
+{
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{} - {} - {}", self.first(), self.second(), self.third())
+    }
+}
+
 pub trait ThreeCycle: Sized {
-    fn edge_cycle(self, cycle: Cycle<Edge>) -> Result<Self, Error>;
-    fn corner_cycle(self, cycle: Cycle<Corner>) -> Result<Self, Error>;
+    fn cycle<T>(self, cycle: Cycle<T>) -> Result<Self, Error>
+    where
+        T: Clone + Copy + FaceletTarget + fmt::Display;
 }
 
 #[cfg(test)]
 mod tests {
     use super::Commutator;
-    use crate::{
-        alg,
-        moves::{Alg, Move},
-    };
+    use crate::{alg, moves::Move};
     use std::str::FromStr;
 
     #[test]

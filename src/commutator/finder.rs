@@ -4,13 +4,19 @@ use crate::{
     moves::{Alg, Inverse, Move, MoveCount, MoveKind},
     sticker::{Corner, Edge},
 };
-use std::collections::HashSet;
+use std::fmt;
+
+#[derive(Debug, PartialEq, Clone)]
+struct Slot {
+    initial_position: Facelet,
+    current_position: Facelet,
+    value: Facelet,
+}
 
 #[derive(Debug)]
 struct SearchParams {
     state: FaceletCube,
     slots: Vec<Slot>,
-    interchange_moves: Vec<Move>,
     allowed_moves: Vec<Move>,
     depth: u8,
 }
@@ -30,11 +36,6 @@ impl SearchParams {
             })
             .collect();
 
-        let interchange_moves = find_parallel_moves(allowed_moves)
-            .into_iter()
-            .flat_map(|m| m.to_moves())
-            .collect::<Vec<_>>();
-
         let allowed_moves = allowed_moves
             .into_iter()
             .flat_map(MoveKind::to_moves)
@@ -43,7 +44,6 @@ impl SearchParams {
         Self {
             state: initial_state,
             slots,
-            interchange_moves,
             allowed_moves,
             depth: 0,
         }
@@ -65,7 +65,6 @@ impl SearchParams {
         Self {
             state,
             slots,
-            interchange_moves: self.interchange_moves.clone(),
             allowed_moves: self.allowed_moves.clone(),
             depth: self.depth + 1,
         }
@@ -84,26 +83,27 @@ impl SearchParams {
     }
 }
 
-#[derive(Debug, PartialEq, Clone)]
-struct Slot {
-    initial_position: Facelet,
-    current_position: Facelet,
-    value: Facelet,
+#[derive(Debug, PartialEq)]
+enum SearchType {
+    Edge,
+    Corner,
 }
 
 #[derive(Debug)]
 struct CommutatorFinder {
     current_moves: Vec<Move>,
-    max_depth: u8,
     results: Vec<Commutator>,
+    search_type: SearchType,
+    max_depth: u8,
 }
 
 impl CommutatorFinder {
-    fn new(max_depth: u8) -> Self {
+    fn new(max_depth: u8, search_type: SearchType) -> Self {
         Self {
             current_moves: Vec::new(),
-            max_depth,
             results: Vec::new(),
+            search_type,
+            max_depth,
         }
     }
 
@@ -113,15 +113,24 @@ impl CommutatorFinder {
     }
 
     fn find_interchange(&mut self, params: SearchParams) {
-        if self.max_depth - params.depth < 4 {
+        let threshold = match self.search_type {
+            SearchType::Corner => 4,
+            SearchType::Edge => 2,
+        };
+
+        if self.max_depth - params.depth < threshold {
             return;
         }
 
-        for m in &params.interchange_moves {
-            let new_state = params.state.clone().apply_move(*m);
+        for interchange in &params.allowed_moves {
+            let new_state = params.state.clone().apply_move(*interchange);
 
             if let Some(insertion) = self.check_interchange(&params, &new_state) {
-                self.find_insertion(&params, *m, insertion);
+                if self.search_type == SearchType::Edge && interchange.count == MoveCount::Double {
+                    self.find_four_mover(&params, *interchange, insertion.0.clone());
+                }
+
+                self.find_insertion(&params, *interchange, insertion);
             }
         }
 
@@ -154,11 +163,7 @@ impl CommutatorFinder {
         interchange: Move,
         insertion: (Slot, Slot),
     ) {
-        if self.max_depth - params.depth < 3 {
-            return;
-        }
-
-        let (source, target) = insertion;
+        let (source, target) = insertion.clone();
         let wrapper_moves = params
             .allowed_moves
             .iter()
@@ -167,7 +172,8 @@ impl CommutatorFinder {
             .kind
             .parallel()
             .into_iter()
-            .flat_map(|m| m.to_moves().into_iter())
+            .flat_map(|m| m.to_moves())
+            .filter(|m| params.allowed_moves.contains(m))
             .collect::<Vec<_>>();
 
         for wm in wrapper_moves {
@@ -180,6 +186,26 @@ impl CommutatorFinder {
                 if last[target.current_position] == source.value {
                     let insertion = Alg::new([*wm, *sm, wm.inverse()]);
                     let insertion_first = target.initial_position == source.value;
+                    self.add_commutator(interchange, insertion, insertion_first);
+                }
+            }
+        }
+    }
+
+    fn find_four_mover(&mut self, params: &SearchParams, interchange: Move, source: Slot) {
+        let slice_moves = params
+            .allowed_moves
+            .iter()
+            .filter(|m| m.kind.is_slice() && m.count != MoveCount::Double);
+
+        for sm in slice_moves {
+            let alg = Alg::new([*sm, interchange, sm.inverse()]);
+            let state = params.state.clone().apply_alg(&alg);
+
+            for slot in &params.slots {
+                if *slot != source && state[slot.current_position] == source.value {
+                    let insertion = Alg::new([*sm]);
+                    let insertion_first = slot.initial_position != source.value;
                     self.add_commutator(interchange, insertion, insertion_first);
                 }
             }
@@ -216,21 +242,25 @@ impl CommutatorFinder {
     }
 }
 
-fn find_parallel_moves(allowed_moves: &[MoveKind]) -> HashSet<MoveKind> {
-    let mut results = HashSet::new();
+fn find_commutators<T>(
+    cycle: Cycle<T>,
+    allowed_moves: &[MoveKind],
+    max_depth: u8,
+    search_type: SearchType,
+) -> Vec<Commutator>
+where
+    T: Clone + Copy + FaceletTarget + fmt::Display,
+{
+    let initial_state = FaceletCube::try_from(cycle.inverse());
 
-    for (i, &m) in allowed_moves.iter().enumerate() {
-        for &n in allowed_moves.iter().skip(i + 1) {
-            let parallel = m.parallel().into_iter().find(|&p| p == n).is_some();
+    initial_state
+        .map(|state| {
+            let finder = CommutatorFinder::new(max_depth, search_type);
+            let params = SearchParams::new(cycle, state, allowed_moves);
 
-            if parallel {
-                results.insert(m);
-                results.insert(n);
-            }
-        }
-    }
-
-    results
+            finder.search(params)
+        })
+        .unwrap_or_default()
 }
 
 pub fn find_corner_commutators(
@@ -238,16 +268,7 @@ pub fn find_corner_commutators(
     allowed_moves: &[MoveKind],
     max_depth: u8,
 ) -> Vec<Commutator> {
-    let initial_state = FaceletCube::try_from(cycle.inverse());
-
-    initial_state
-        .map(|state| {
-            let finder = CommutatorFinder::new(max_depth);
-            let params = SearchParams::new(cycle, state, allowed_moves);
-
-            finder.search(params)
-        })
-        .unwrap_or_default()
+    find_commutators(cycle, allowed_moves, max_depth, SearchType::Corner)
 }
 
 pub fn find_edge_commutators(
@@ -255,67 +276,48 @@ pub fn find_edge_commutators(
     allowed_moves: &[MoveKind],
     max_depth: u8,
 ) -> Vec<Commutator> {
-    let initial_state = FaceletCube::try_from(cycle.inverse());
-
-    initial_state
-        .map(|state| {
-            let finder = CommutatorFinder::new(max_depth);
-            let params = SearchParams::new(cycle, state, allowed_moves);
-
-            finder.search(params)
-        })
-        .unwrap_or_default()
+    find_commutators(cycle, allowed_moves, max_depth, SearchType::Edge)
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::alg;
 
-    #[test]
-    fn test_parallel_moves() {
-        let moves = [
-            MoveKind::U,
-            MoveKind::F,
-            MoveKind::R,
-            MoveKind::D,
-            MoveKind::L,
-        ];
-        let results = find_parallel_moves(&moves);
-        let expected = [MoveKind::U, MoveKind::D, MoveKind::R, MoveKind::L]
+    fn assert_commutators(initial_state: FaceletCube, commutator: Vec<Commutator>) {
+        assert!(!commutator.is_empty());
+        assert!(commutator
             .into_iter()
-            .collect::<HashSet<_>>();
-
-        assert_eq!(expected, results);
-
-        let moves = [
-            MoveKind::L,
-            MoveKind::F,
-            MoveKind::U,
-            MoveKind::R,
-            MoveKind::M,
-        ];
-        let results = find_parallel_moves(&moves);
-        let expected = vec![MoveKind::L, MoveKind::R, MoveKind::M]
-            .into_iter()
-            .collect::<HashSet<_>>();
-
-        assert_eq!(expected, results);
+            .map(|c| initial_state.clone().apply_commutator(&c))
+            .all(|s| s == FaceletCube::default()));
     }
 
     #[test]
     fn test_corner_commutators() {
         let cycle = Cycle::new(Corner::UFR, Corner::URB, Corner::RFD);
+        let initial_state = FaceletCube::try_from(cycle.clone().inverse()).unwrap();
         let allowed_moves = vec![MoveKind::U, MoveKind::R, MoveKind::D];
-        let results = find_corner_commutators(cycle, &allowed_moves, 4);
-        let expected = Commutator {
-            setup: None,
-            interchange: Move::new(MoveKind::U, MoveCount::Simple),
-            insertion: alg!("R' D' R"),
-            insertion_first: true,
-        };
+        let results = find_corner_commutators(cycle, &allowed_moves, 6);
 
-        assert!(results.len() == 1);
-        assert_eq!(results[0], expected);
+        assert_commutators(initial_state, results);
+    }
+
+    #[test]
+    fn test_edge_commutators() {
+        let cycle = Cycle::new(Edge::UF, Edge::UB, Edge::LF);
+        let initial_state = FaceletCube::try_from(cycle.clone().inverse()).unwrap();
+        let allowed_moves = vec![MoveKind::U, MoveKind::R, MoveKind::E];
+        let results = find_edge_commutators(cycle, &allowed_moves, 5);
+
+        assert_commutators(initial_state, results);
+    }
+
+    #[test]
+    fn test_four_mover() {
+        let cycle = Cycle::new(Edge::UF, Edge::UB, Edge::DF);
+        let initial_state = FaceletCube::try_from(cycle.clone().inverse()).unwrap();
+        let allowed_moves = vec![MoveKind::U, MoveKind::M];
+        let results = find_edge_commutators(cycle, &allowed_moves, 2);
+
+        assert_commutators(initial_state, results);
     }
 }

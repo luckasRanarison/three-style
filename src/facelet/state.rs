@@ -3,10 +3,9 @@ use super::{
     FaceletTarget,
 };
 use crate::{
-    commutator::types::{Cycle, ThreeCycle},
+    commutator::types::{Commutator, Cycle, ThreeCycle},
     error::Error,
     moves::{Alg, Move, MoveCount, MoveKind},
-    sticker::{Corner, Edge},
 };
 use constants::*;
 use std::{
@@ -45,6 +44,10 @@ impl FaceletCube {
     pub fn apply_alg(self, alg: &Alg) -> Self {
         alg.iter().fold(self, |acc, m| acc.apply_move(*m))
     }
+
+    pub fn apply_commutator(self, commutator: &Commutator) -> Self {
+        self.apply_alg(&commutator.expand())
+    }
 }
 
 impl From<Move> for FaceletCube {
@@ -78,19 +81,14 @@ impl From<Move> for FaceletCube {
     }
 }
 
-impl TryFrom<Cycle<Corner>> for FaceletCube {
+impl<T> TryFrom<Cycle<T>> for FaceletCube
+where
+    T: Clone + Copy + FaceletTarget + fmt::Display,
+{
     type Error = Error;
 
-    fn try_from(value: Cycle<Corner>) -> Result<Self, Self::Error> {
-        FaceletCube::default().corner_cycle(value)
-    }
-}
-
-impl TryFrom<Cycle<Edge>> for FaceletCube {
-    type Error = Error;
-
-    fn try_from(value: Cycle<Edge>) -> Result<Self, Self::Error> {
-        FaceletCube::default().edge_cycle(value)
+    fn try_from(value: Cycle<T>) -> Result<Self, Self::Error> {
+        FaceletCube::default().cycle(value)
     }
 }
 
@@ -157,58 +155,33 @@ impl fmt::Display for FaceletCube {
     }
 }
 
-fn count_unique_facelets(first: &[F], second: &[F], third: &[F]) -> usize {
-    first
-        .iter()
-        .chain(second.iter())
-        .chain(third.iter())
-        .collect::<HashSet<_>>()
-        .len()
-}
-
 impl ThreeCycle for FaceletCube {
-    fn edge_cycle(self, cycle: Cycle<Edge>) -> Result<Self, Error> {
+    fn cycle<T>(self, cycle: Cycle<T>) -> Result<Self, Error>
+    where
+        T: fmt::Display + Clone + Copy + FaceletTarget,
+    {
         let mut res = self.clone();
         let first = cycle.first().to_facelets();
         let second = cycle.second().to_facelets();
         let third = cycle.third().to_facelets();
-        let count = count_unique_facelets(&first, &second, &third);
+        let expected_count = first.len() + second.len() + third.len();
+        let count = first
+            .iter()
+            .chain(second.iter())
+            .chain(third.iter())
+            .collect::<HashSet<_>>()
+            .len();
 
-        if count == 6 {
-            res.0[first[0] as usize] = self.0[third[0] as usize];
-            res.0[first[1] as usize] = self.0[third[1] as usize];
-            res.0[second[0] as usize] = self.0[first[0] as usize];
-            res.0[second[1] as usize] = self.0[first[1] as usize];
-            res.0[third[0] as usize] = self.0[second[0] as usize];
-            res.0[third[1] as usize] = self.0[second[1] as usize];
-
-            Ok(res)
-        } else {
-            Err(Error::InvalidEdgeCycle(cycle.to_owned()))
-        }
-    }
-
-    fn corner_cycle(self, cycle: Cycle<Corner>) -> Result<Self, Error> {
-        let mut res = self.clone();
-        let first = cycle.first().to_facelets();
-        let second = cycle.second().to_facelets();
-        let third = cycle.third().to_facelets();
-        let count = count_unique_facelets(&first, &second, &third);
-
-        if count == 9 {
-            res.0[first[0] as usize] = self.0[third[0] as usize];
-            res.0[first[1] as usize] = self.0[third[1] as usize];
-            res.0[first[2] as usize] = self.0[third[2] as usize];
-            res.0[second[0] as usize] = self.0[first[0] as usize];
-            res.0[second[1] as usize] = self.0[first[1] as usize];
-            res.0[second[2] as usize] = self.0[first[2] as usize];
-            res.0[third[0] as usize] = self.0[second[0] as usize];
-            res.0[third[1] as usize] = self.0[second[1] as usize];
-            res.0[third[2] as usize] = self.0[second[2] as usize];
+        if count == expected_count {
+            for i in 0..count / 3 {
+                res.0[first[i] as usize] = self.0[third[i] as usize];
+                res.0[second[i] as usize] = self.0[first[i] as usize];
+                res.0[third[i] as usize] = self.0[second[i] as usize];
+            }
 
             Ok(res)
         } else {
-            Err(Error::InvalidCornerCycle(cycle.to_owned()))
+            Err(Error::InvalidThreeCycle(cycle.to_string()))
         }
     }
 }
@@ -383,8 +356,11 @@ mod constants {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{alg, moves::Inverse, sticker::Corner};
-    use std::str::FromStr;
+    use crate::{
+        alg,
+        moves::Inverse,
+        sticker::{Corner, Edge},
+    };
 
     #[test]
     fn test_primitive_moves() {
@@ -451,7 +427,7 @@ mod tests {
     #[test]
     fn test_edge_cycle() {
         let cycle = Cycle::new(Edge::UF, Edge::UB, Edge::FL);
-        let cube = FaceletCube::default().edge_cycle(cycle).unwrap();
+        let cube = FaceletCube::default().cycle(cycle).unwrap();
 
         #[rustfmt::skip]
         let expecte = FaceletCube([
@@ -465,7 +441,7 @@ mod tests {
 
         assert_eq!(expecte, cube);
 
-        let cube = cube.edge_cycle(cycle.inverse()).unwrap();
+        let cube = cube.cycle(cycle.inverse()).unwrap();
 
         assert_eq!(FaceletCube::default(), cube);
     }
@@ -473,7 +449,7 @@ mod tests {
     #[test]
     fn test_corner_cycle() {
         let cycle = Cycle::new(Corner::UFR, Corner::ULF, Corner::RFD);
-        let cube = FaceletCube::default().corner_cycle(cycle).unwrap();
+        let cube = FaceletCube::default().cycle(cycle).unwrap();
 
         #[rustfmt::skip]
         let expecte = FaceletCube([
@@ -487,7 +463,7 @@ mod tests {
 
         assert_eq!(expecte, cube);
 
-        let cube = cube.corner_cycle(cycle.inverse()).unwrap();
+        let cube = cube.cycle(cycle.inverse()).unwrap();
 
         assert_eq!(FaceletCube::default(), cube);
     }
