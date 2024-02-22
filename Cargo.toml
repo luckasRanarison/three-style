@@ -1,7 +1,2 @@
-[package]
-name = "three-style"
-version = "0.1.0"
-edition = "2021"
-
-[dependencies]
-thiserror = "1.0.57"
+[workspace]
+members = ["three-style-lib", "three-style-cli"]

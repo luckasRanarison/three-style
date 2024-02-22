@@ -13,12 +13,6 @@ pub enum MoveKind {
     Uw, Rw, Fw, Dw, Lw, Bw,
 }
 
-impl fmt::Display for MoveKind {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{:?}", self)
-    }
-}
-
 impl MoveKind {
     pub fn is_side(self) -> bool {
         matches!(
@@ -83,6 +77,40 @@ impl Inverse for MoveKind {
     }
 }
 
+impl FromStr for MoveKind {
+    type Err = Error;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "U" => Ok(MoveKind::U),
+            "F" => Ok(MoveKind::F),
+            "R" => Ok(MoveKind::R),
+            "B" => Ok(MoveKind::B),
+            "L" => Ok(MoveKind::L),
+            "D" => Ok(MoveKind::D),
+            "M" => Ok(MoveKind::M),
+            "S" => Ok(MoveKind::S),
+            "E" => Ok(MoveKind::E),
+            "x" => Ok(MoveKind::X),
+            "y" => Ok(MoveKind::Y),
+            "z" => Ok(MoveKind::Z),
+            "u" => Ok(MoveKind::Uw),
+            "f" => Ok(MoveKind::Fw),
+            "r" => Ok(MoveKind::Rw),
+            "b" => Ok(MoveKind::Bw),
+            "l" => Ok(MoveKind::Lw),
+            "d" => Ok(MoveKind::Dw),
+            _ => Err(Error::InvalidMove(s.to_owned())),
+        }
+    }
+}
+
+impl fmt::Display for MoveKind {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{:?}", self)
+    }
+}
+
 #[derive(Debug, PartialEq, Clone, Copy)]
 pub enum MoveCount {
     Simple = 1,
@@ -96,6 +124,19 @@ impl Inverse for MoveCount {
             MoveCount::Simple => MoveCount::Prime,
             MoveCount::Double => MoveCount::Double,
             MoveCount::Prime => MoveCount::Simple,
+        }
+    }
+}
+
+impl FromStr for MoveCount {
+    type Err = Error;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "2" => Ok(MoveCount::Double),
+            "'" => Ok(MoveCount::Prime),
+            "" => Ok(MoveCount::Simple),
+            _ => Err(Error::InvalidMove(s.to_owned())),
         }
     }
 }
@@ -155,36 +196,12 @@ impl FromStr for Move {
     type Err = Error;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let count = match s.get(1..2) {
-            Some("2") => MoveCount::Double,
-            Some("'") => MoveCount::Prime,
-            None => MoveCount::Simple,
-            _ => return Err(Error::InvalidMove(s.to_owned())),
-        };
+        let kind = s.get(..1).unwrap_or_default();
+        let kind = MoveKind::from_str(kind)?;
+        let count = s.get(1..2).unwrap_or_default();
+        let count = MoveCount::from_str(count)?;
 
-        let kind = match &s[0..1] {
-            "U" => Ok(MoveKind::U),
-            "F" => Ok(MoveKind::F),
-            "R" => Ok(MoveKind::R),
-            "B" => Ok(MoveKind::B),
-            "L" => Ok(MoveKind::L),
-            "D" => Ok(MoveKind::D),
-            "M" => Ok(MoveKind::M),
-            "S" => Ok(MoveKind::S),
-            "E" => Ok(MoveKind::E),
-            "x" => Ok(MoveKind::X),
-            "y" => Ok(MoveKind::Y),
-            "z" => Ok(MoveKind::Z),
-            "u" => Ok(MoveKind::Uw),
-            "f" => Ok(MoveKind::Fw),
-            "r" => Ok(MoveKind::Rw),
-            "b" => Ok(MoveKind::Bw),
-            "l" => Ok(MoveKind::Lw),
-            "d" => Ok(MoveKind::Dw),
-            _ => Err(Error::InvalidMove(s.to_owned())),
-        };
-
-        kind.map(|kind| Self { kind, count })
+        Ok(Self { kind, count })
     }
 }
 
