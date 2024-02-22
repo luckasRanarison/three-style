@@ -11,5 +11,5 @@ license = "MIT"
 readme = "../README.md"
 
 [dependencies]
-three-style-lib = { path = "../three-style-lib" }
 clap = { version = "4.5.1", features = ["derive", "color"] }
+three-style-lib = "0.1.0"
