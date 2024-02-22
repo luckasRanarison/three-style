@@ -26,10 +26,15 @@ cargo install three-style
 three-style uses layers for describing pieces or more precisely sticker targets. Example: `UF` (edge), `UBL` (corner). Currently, it only exposes one main command `search` and is used in the following way:
 
 ```bash
+# corners
 three-style search --gen RUD --corners UFR UBL RFD --depth 4
+
+# edges
+three-style search --gen RUE --edges UF UB LF --depth 5
+
+# shorter versions
 three-style search -g RUD -c UFR UBL RFD -d 4
-three-style search --gen RUE --edges UF UB LF --depth 4
-three-style search -g RUD -e UF UB LF -d 4
+three-style search -g RUD -e UF UB LF -d 5
 ```
 
 > [!NOTE]
@@ -39,7 +44,7 @@ three-style search -g RUD -e UF UB LF -d 4
 
 A commutator is an algorithm of the form: `A B A' B'` which allows us to swap 3 pieces at once without affecting the rest of the cube. It's commonly described in the following notation: `[A, B]`.
 
-It consists of two basic parts:
+It consists of two basic interchangeable parts:
 
 - An **interchange** is a single move that swaps two pieces without affecting the third one
 - An **insertion** are three moves that insert the third piece into one of the two pieces spot without affecting the other one.
@@ -47,9 +52,9 @@ It consists of two basic parts:
 But not all cases can be solved using pure commutators, some cases require using setup moves. A **setup move** is a sequence of moves that turn the case into a case that can be solved using pure commutators. Commutators that use setup moves are of the form `S A B A' B' S'` and are more commonly written as `[S: [A, B]]`
 
 > [!NOTE]
-> Edges has a special case called **4 movers** which don't use the normal 3 moves insertion. Example: `[M', U2]`
+> Edges have a special case called **4 movers** which don't use the normal 3 moves insertion. Example: `[M', U2]`
 
-The program basically does an interative DFS and applies these rules to find commutators. Because these rules allow efficient prunning, search is decently fast.
+The program basically does an iterative DFS and applies these rules to find commutators. Because these rules allow efficient prunning, search is decently fast.
 
 ## References
 
