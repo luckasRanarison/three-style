@@ -23,22 +23,20 @@ struct Cli {
 
 impl Cli {
     fn exec(self) -> Result<(), Error> {
-        match self.command {
-            Some(Command::Search {
-                corners,
-                edges,
-                gen,
-                depth,
-            }) => {
-                let commutators = match (corners, edges) {
-                    (Some(corners), None) => search_corner_commutators(corners, gen, depth)?,
-                    (None, Some(edges)) => search_edge_commutators(edges, gen, depth)?,
-                    _ => unreachable!(),
-                };
+        if let Some(Command::Search {
+            corners,
+            edges,
+            gen,
+            depth,
+        }) = self.command
+        {
+            let commutators = match (corners, edges) {
+                (Some(corners), None) => search_corner_commutators(corners, gen, depth)?,
+                (None, Some(edges)) => search_edge_commutators(edges, gen, depth)?,
+                _ => unreachable!(),
+            };
 
-                print_commutators(commutators);
-            }
-            None => {}
+            print_commutators(commutators);
         }
 
         Ok(())

@@ -100,7 +100,7 @@ impl Add<Self> for Alg {
 
     fn add(self, rhs: Self) -> Self::Output {
         Self {
-            moves: self.moves.into_iter().chain(rhs.into_iter()).collect(),
+            moves: self.moves.into_iter().chain(rhs).collect(),
         }
     }
 }
