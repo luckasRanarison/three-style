@@ -130,7 +130,9 @@ impl CommutatorFinder {
                     self.find_four_mover(&params, *interchange, insertion.0.clone());
                 }
 
-                self.find_insertion(&params, *interchange, insertion);
+                if self.max_depth - params.depth > 2 {
+                    self.find_insertion(&params, *interchange, insertion);
+                }
             }
         }
 

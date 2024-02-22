@@ -3,18 +3,19 @@
 [![Build/test](https://github.com/luckasRanarison/three-style/actions/workflows/ci.yml/badge.svg)](https://github.com/luckasRanarison/three-style/actions/workflows/ci.yml)
 [![crates.io](https://img.shields.io/crates/v/three-style)](https://crates.io/crates/three-style)
 
-three-style is a program for searching 3x3 commutators for the 3-style method which is an advanced method for solving the Rubik's cube blindfolded by swapping 3 pieces at a time without affecting the rest of the cube.
+three-style is a program that searches 3x3 commutators used in 3-style, an advanced method for solving the Rubik's cube blindfolded by swapping 3 pieces at a time without affecting the rest of the cube.
 
 ## Contents
 
 - [Installation](#installation)
 - [Usage](#usage)
 - [Concept](#concept)
+- [References](#concept)
 - [Contributing](#contributing)
 
 ## Installation
 
-You can use three-style by downloading the prebuilt binaries for your system from the [releases](https://github.com/luckasRanarison/three-style/releases) or by installing it using cargo:
+You can use three-style by downloading the prebuilt binary for your system from the [releases](https://github.com/luckasRanarison/three-style/releases) or by installing it using cargo:
 
 ```bash
 cargo install three-style
@@ -53,6 +54,8 @@ The program basically does an interative DFS and applies these rules to find com
 ## References
 
 - [3-style tutorial by Timothy Goh](https://youtu.be/Bq9oz1k5wP4?si=fC3Xi_7j0ehMaepG)
+
+- [Cube explorer](http://kociemba.org/cube.htm)
 
 ## Contributing
 
