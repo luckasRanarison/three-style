@@ -2,6 +2,13 @@
 name = "three-style-lib"
 version = "0.1.0"
 edition = "2021"
+description = "A 3x3 Rubik's Cube three style library"
+authors = ["LIOKA Ranraison Fiderana <luckasranarison@gmail.com>"]
+repository = "https://github.com/luckasRanarison/three-style"
+keywords = ["rubiks-cube", "three-style", "commutators", "algorithms"]
+categories = ["algorithms"]
+license = "MIT"
+readme = "../README.md"
 
 [dependencies]
 thiserror = "1.0.57"

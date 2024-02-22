@@ -21,6 +21,30 @@ struct Cli {
     command: Option<Command>,
 }
 
+impl Cli {
+    fn exec(self) -> Result<(), Error> {
+        match self.command {
+            Some(Command::Search {
+                corners,
+                edges,
+                gen,
+                depth,
+            }) => {
+                let commutators = match (corners, edges) {
+                    (Some(corners), None) => search_corner_commutators(corners, gen, depth)?,
+                    (None, Some(edges)) => search_edge_commutators(edges, gen, depth)?,
+                    _ => unreachable!(),
+                };
+
+                print_commutators(commutators);
+            }
+            None => {}
+        }
+
+        Ok(())
+    }
+}
+
 #[derive(Subcommand)]
 enum Command {
     #[command(about = "Search commutators for the given three cycle")]
@@ -29,7 +53,7 @@ enum Command {
         .required(true)
         .args(&["corners", "edges"]),
     ))]
-    Cycle {
+    Search {
         #[arg(long, short, num_args(3))]
         corners: Option<Vec<String>>,
 
@@ -104,25 +128,9 @@ fn print_error(error: String) {
 
 fn main() {
     let cli = Cli::parse();
+    let result = cli.exec();
 
-    match cli.command {
-        Some(Command::Cycle {
-            corners,
-            edges,
-            gen,
-            depth,
-        }) => {
-            let result = match (corners, edges) {
-                (Some(corners), None) => search_corner_commutators(corners, gen, depth),
-                (None, Some(edges)) => search_edge_commutators(edges, gen, depth),
-                _ => unreachable!(),
-            };
-
-            match result {
-                Ok(commutators) => print_commutators(commutators),
-                Err(error) => print_error(error.to_string()),
-            }
-        }
-        None => {}
+    if let Err(error) = result {
+        print_error(error.to_string());
     }
 }
