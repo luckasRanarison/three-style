@@ -162,14 +162,7 @@ name = "three-style"
 version = "0.1.0"
 dependencies = [
  "clap",
- "three-style-lib 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
-]
-
-[[package]]
-name = "three-style-lib"
-version = "0.1.0"
-dependencies = [
- "thiserror",
+ "three-style-lib 0.1.0",
 ]
 
 [[package]]
@@ -177,6 +170,13 @@ name = "three-style-lib"
 version = "0.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3985d09674ef83bf77bd812b86b3dcc4943127cb9e5f5b3b28bb9f26d3e087cb"
+dependencies = [
+ "thiserror",
+]
+
+[[package]]
+name = "three-style-lib"
+version = "0.1.1"
 dependencies = [
  "thiserror",
 ]
