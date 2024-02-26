@@ -1,6 +1,6 @@
 [package]
 name = "three-style"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 description = "A CLI tool for searching 3x3 Rubiks'cube 3-style commutators"
 authors = ["LIOKA Ranraison Fiderana <luckasranarison@gmail.com>"]
@@ -12,4 +12,4 @@ readme = "../README.md"
 
 [dependencies]
 clap = { version = "4.5.1", features = ["derive", "color"] }
-three-style-lib = "0.1.0"
+three-style-lib = "0.1.1"
