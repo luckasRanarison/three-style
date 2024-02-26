@@ -1,2 +1,3 @@
 [workspace]
 members = ["three-style-lib", "three-style-cli"]
+resolver = "2"
