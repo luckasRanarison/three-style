@@ -9,7 +9,7 @@ const App = () => {
       <Navbar />
       <MainContainer>
         <Cube />
-        {/* <AlgPanel /> */}
+        <AlgPanel />
       </MainContainer>
     </>
   );

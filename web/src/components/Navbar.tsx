@@ -8,7 +8,7 @@ const Navbar = () => {
   return (
     <div
       className="py-5 px-8 flex justify-between
-      border-b-[1px] border-b-gray-200 dark:border-b-neutral-900
+      border-b-[1px] border-b-gray-200 dark:border-b-neutral-800
       text-neutral-700 dark:text-white"
     >
       <div className="space-x-2 flex items-center">

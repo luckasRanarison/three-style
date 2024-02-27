@@ -15,6 +15,7 @@ const usePlayer = () => useContext(playerContext);
 const defaultConfig: TwistyPlayerConfig = {
   background: "none",
   controlPanel: "none",
+  visualization: "PG3D",
 };
 
 const PlayerContextProvider = (props: { children: React.ReactNode }) => {
