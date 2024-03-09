@@ -54,7 +54,35 @@ But not all cases can be solved using pure commutators, some cases require using
 > [!NOTE]
 > Edges have a special case called **4 movers** which don't use the normal 3 moves insertion. Example: `[M', U2]`
 
-The program basically does an iterative DFS and applies these rules to find commutators. Because these rules allow efficient prunning, search is decently fast.
+Here are the steps to find any commutator:
+
+```
+           *------------------*
+           | Choose a moveset |
+           *------------------*
+                    |
+                    v
+          *--------------------*  no   *------------------*
+          | Interchange exists | ----> | Find setup moves |
+          *--------------------* <---- *------------------*
+                    | yes                        ^
+                    v                            |
+           *------------------*        no        |
+           | Insertion exists | ------------------
+           *------------------*
+                    | yes
+                    v
+    *--------------------------------*
+    | Interchange or insertion first |
+    *--------------------------------*
+                    |
+                    v
+                *------*
+                | Done |
+                *------*
+```
+
+The program basically does an iterative DFS and follows these steps to find commutators. The rules for the interchange and the insertion are used for prunning and search is decently fast.
 
 ## References
 
