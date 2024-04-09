@@ -2,7 +2,10 @@ use clap::{
     builder::styling::{AnsiColor, Color, Style},
     Parser, Subcommand,
 };
-use std::str::FromStr;
+use std::{
+    str::FromStr,
+    time::{Duration, Instant},
+};
 use three_style_lib::{
     commutator::{
         finder::{find_corner_commutators, find_edge_commutators},
@@ -30,13 +33,15 @@ impl Cli {
             depth,
         }) = self.command
         {
+            let start = Instant::now();
             let commutators = match (corners, edges) {
                 (Some(corners), None) => search_corner_commutators(corners, gen, depth)?,
                 (None, Some(edges)) => search_edge_commutators(edges, gen, depth)?,
                 _ => unreachable!(),
             };
+            let end = Instant::now();
 
-            print_commutators(commutators);
+            print_commutators(commutators, end - start);
         }
 
         Ok(())
@@ -104,15 +109,26 @@ fn search_edge_commutators(
     Ok(results)
 }
 
-fn print_commutators(commutators: Vec<Commutator>) {
+fn print_commutators(commutators: Vec<Commutator>, duration: Duration) {
+    let duration = duration.as_secs_f32();
+    let count = commutators.len();
+    let bold = Style::new().bold();
+    let cyan = Style::new().fg_color(Some(Color::Ansi(AnsiColor::Cyan)));
+    let green = Style::new().fg_color(Some(Color::Ansi(AnsiColor::Green)));
+
     for comm in commutators {
-        let style = Style::new().bold();
         println!(
-            "{style}{}{style:#}: {} ({})",
+            "{bold}{}{bold:#}: {} {cyan}({}){cyan:#}",
             comm,
             comm.expand(),
             comm.expand().len()
         );
+    }
+
+    if count > 0 {
+        println!("\nFound {green}{count}{green:#} results in {duration:.2}s.");
+    } else {
+        println!("No result found.");
     }
 }
 
@@ -121,7 +137,7 @@ fn print_error(error: String) {
         .bold()
         .fg_color(Some(Color::Ansi(AnsiColor::Red)));
 
-    println!("{style}error{style:#}: {}", error);
+    eprintln!("{style}error{style:#}: {}", error);
 }
 
 fn main() {
