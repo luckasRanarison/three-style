@@ -37,15 +37,15 @@ impl FaceletCube {
             .all(|side| side.iter().all(|c| Some(c) == side.first()))
     }
 
-    pub fn apply_move(self, m: Move) -> Self {
-        self * FaceletCube::from(m)
+    pub fn apply_move(&self, m: Move) -> Self {
+        self * &FaceletCube::from(m)
     }
 
-    pub fn apply_alg(self, alg: &Alg) -> Self {
-        alg.iter().fold(self, |acc, m| acc.apply_move(*m))
+    pub fn apply_alg(&self, alg: &Alg) -> Self {
+        alg.iter().fold(self.clone(), |acc, m| acc.apply_move(*m))
     }
 
-    pub fn apply_commutator(self, commutator: &Commutator) -> Self {
+    pub fn apply_commutator(&self, commutator: &Commutator) -> Self {
         self.apply_alg(&commutator.expand())
     }
 }
@@ -75,8 +75,8 @@ impl From<Move> for FaceletCube {
 
         match value.count {
             MoveCount::Simple => state,
-            MoveCount::Double => state.clone() * state,
-            MoveCount::Prime => state.clone() * state.clone() * state,
+            MoveCount::Double => state.mul(&state),
+            MoveCount::Prime => state.mul(&state).mul(&state),
         }
     }
 }
@@ -89,15 +89,6 @@ where
 
     fn try_from(value: Cycle<T>) -> Result<Self, Self::Error> {
         FaceletCube::default().cycle(value)
-    }
-}
-
-impl IntoIterator for FaceletCube {
-    type Item = F;
-    type IntoIter = std::array::IntoIter<F, 54>;
-
-    fn into_iter(self) -> Self::IntoIter {
-        self.0.into_iter()
     }
 }
 
@@ -129,13 +120,13 @@ impl IndexMut<F> for FaceletCube {
     }
 }
 
-impl Mul<Self> for FaceletCube {
-    type Output = Self;
+impl Mul<Self> for &FaceletCube {
+    type Output = FaceletCube;
 
     fn mul(self, rhs: Self) -> Self::Output {
         let mut res = FaceletCube::default();
 
-        for (i, f) in rhs.into_iter().enumerate() {
+        for (i, &f) in rhs.0.iter().enumerate() {
             res[i] = self[f];
         }
 

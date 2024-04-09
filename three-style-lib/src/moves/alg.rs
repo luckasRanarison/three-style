@@ -3,22 +3,18 @@ use crate::error::Error;
 use std::{fmt, ops::Add, str::FromStr};
 
 #[derive(Debug, Default, PartialEq, Clone)]
-pub struct Alg {
-    moves: Vec<Move>,
-}
+pub struct Alg(Vec<Move>);
 
 impl Alg {
     pub fn new<T>(moves: T) -> Self
     where
         T: IntoIterator<Item = Move>,
     {
-        Self {
-            moves: moves.into_iter().collect(),
-        }
+        Self(moves.into_iter().collect())
     }
 
     pub fn len(&self) -> usize {
-        self.moves.len()
+        self.0.len()
     }
 
     pub fn is_empty(&self) -> bool {
@@ -26,50 +22,45 @@ impl Alg {
     }
 
     pub fn iter(&self) -> impl Iterator<Item = &Move> {
-        self.moves.iter()
+        self.0.iter()
     }
 
     pub fn clean(self) -> Self {
-        let mut groups: Vec<Vec<Move>> = Vec::new();
+        let mut groups: Vec<Vec<Option<Move>>> = vec![];
 
-        for m in self.moves {
-            if let Some(group) = groups.last_mut() {
-                let last = group.last().unwrap();
+        for m in self.0 {
+            if let Some(last_group) = groups.last_mut() {
+                let aligned_move = last_group
+                    .iter()
+                    .flatten()
+                    .last()
+                    .filter(|l| l.kind == m.kind || m.kind == l.kind.inverse());
 
-                if m.kind == last.kind || last.kind.inverse() == m.kind {
-                    group.push(m);
-                } else {
-                    groups.push(vec![m]);
+                if aligned_move.is_some() {
+                    let existing_move = last_group.iter_mut().find_map(|n| {
+                        n.and_then(|l| if l.kind == m.kind { Some((n, l)) } else { None })
+                    });
+
+                    if let Some((move_ref, move_val)) = existing_move {
+                        *move_ref = move_val * m;
+                    } else {
+                        last_group.push(Some(m));
+                    }
+
+                    continue;
                 }
-            } else {
-                groups.push(vec![m]);
             }
+
+            groups.push(vec![Some(m)]);
         }
 
-        let results = groups.into_iter().flat_map(|group| {
-            let first = group.first().unwrap();
-            let (first, second): (Vec<Move>, Vec<Move>) =
-                group.iter().partition(|m| m.kind == first.kind);
-            let first = first.into_iter().fold(None, |acc, m| match acc {
-                Some(acc) => acc * m,
-                None => Some(m),
-            });
-            let second = second.into_iter().fold(None, |acc, m| match acc {
-                Some(acc) => acc * m,
-                None => Some(m),
-            });
-            [first, second].into_iter().flatten()
-        });
-
-        Alg::new(results)
+        Alg::new(groups.into_iter().flatten().flatten())
     }
 }
 
 impl Inverse for Alg {
     fn inverse(&self) -> Self {
-        Self {
-            moves: self.moves.iter().rev().map(Move::inverse).collect(),
-        }
+        Self(self.0.iter().rev().map(Move::inverse).collect())
     }
 }
 
@@ -78,7 +69,7 @@ impl IntoIterator for Alg {
     type IntoIter = std::vec::IntoIter<Move>;
 
     fn into_iter(self) -> Self::IntoIter {
-        self.moves.into_iter()
+        self.0.into_iter()
     }
 }
 
@@ -99,9 +90,7 @@ impl Add<Self> for Alg {
     type Output = Self;
 
     fn add(self, rhs: Self) -> Self::Output {
-        Self {
-            moves: self.moves.into_iter().chain(rhs).collect(),
-        }
+        Self(self.0.into_iter().chain(rhs).collect())
     }
 }
 
@@ -124,7 +113,7 @@ impl Add<&Alg> for Alg {
 impl fmt::Display for Alg {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let s = self
-            .moves
+            .0
             .iter()
             .map(|m| m.to_string())
             .collect::<Vec<_>>()
@@ -155,26 +144,22 @@ mod tests {
 
         assert_eq!(
             alg,
-            Alg {
-                moves: vec![
-                    Move::new(MoveKind::R, MoveCount::Simple),
-                    Move::new(MoveKind::U, MoveCount::Simple),
-                    Move::new(MoveKind::R, MoveCount::Prime),
-                    Move::new(MoveKind::U, MoveCount::Prime)
-                ]
-            }
+            Alg(vec![
+                Move::new(MoveKind::R, MoveCount::Simple),
+                Move::new(MoveKind::U, MoveCount::Simple),
+                Move::new(MoveKind::R, MoveCount::Prime),
+                Move::new(MoveKind::U, MoveCount::Prime)
+            ])
         );
 
         assert_eq!(
             inverse,
-            Alg {
-                moves: vec![
-                    Move::new(MoveKind::U, MoveCount::Simple),
-                    Move::new(MoveKind::R, MoveCount::Simple),
-                    Move::new(MoveKind::U, MoveCount::Prime),
-                    Move::new(MoveKind::R, MoveCount::Prime)
-                ]
-            }
+            Alg(vec![
+                Move::new(MoveKind::U, MoveCount::Simple),
+                Move::new(MoveKind::R, MoveCount::Simple),
+                Move::new(MoveKind::U, MoveCount::Prime),
+                Move::new(MoveKind::R, MoveCount::Prime)
+            ])
         );
     }
 

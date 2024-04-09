@@ -4,7 +4,7 @@ use crate::{
     moves::{Alg, Inverse, Move, MoveCount, MoveKind},
     sticker::{Corner, Edge},
 };
-use std::fmt;
+use std::{fmt, ops::Not};
 
 #[derive(Debug, PartialEq, Clone)]
 struct Slot {
@@ -14,35 +14,32 @@ struct Slot {
 }
 
 #[derive(Debug)]
-struct SearchParams {
+struct Insertion {
+    source: Slot,
+    target: Slot,
+}
+
+#[derive(Debug)]
+struct SearchParams<'a> {
     state: FaceletCube,
-    slots: Vec<Slot>,
-    allowed_moves: Vec<Move>,
+    slots: [Slot; 3],
+    allowed_moves: &'a [Move],
     depth: u8,
 }
 
-impl SearchParams {
-    fn new<T>(cycle: Cycle<T>, initial_state: FaceletCube, allowed_moves: &[MoveKind]) -> Self
+impl<'a> SearchParams<'a> {
+    fn new<T>(cycle: Cycle<T>, state: FaceletCube, allowed_moves: &'a [Move]) -> Self
     where
         T: Clone + Copy + FaceletTarget,
     {
-        let slots = cycle
-            .to_facelets()
-            .into_iter()
-            .map(|f| Slot {
-                initial_position: f,
-                current_position: f,
-                value: initial_state[f],
-            })
-            .collect();
-
-        let allowed_moves = allowed_moves
-            .iter()
-            .flat_map(MoveKind::to_moves)
-            .collect::<Vec<_>>();
+        let slots = cycle.to_facelets().map(|f| Slot {
+            initial_position: f,
+            current_position: f,
+            value: state[f],
+        });
 
         Self {
-            state: initial_state,
+            state,
             slots,
             allowed_moves,
             depth: 0,
@@ -50,22 +47,18 @@ impl SearchParams {
     }
 
     fn next(&self, m: Move) -> Self {
-        let state = self.state.clone().apply_move(m);
+        let state = self.state.apply_move(m);
         let permutation = FaceletPermutation::from(m);
-        let slots = self
-            .slots
-            .iter()
-            .map(|s| Slot {
-                initial_position: s.initial_position,
-                current_position: permutation[s.current_position],
-                value: s.value,
-            })
-            .collect();
+        let slots = self.slots.clone().map(|s| Slot {
+            initial_position: s.initial_position,
+            current_position: permutation[s.current_position],
+            value: s.value,
+        });
 
         Self {
             state,
             slots,
-            allowed_moves: self.allowed_moves.clone(),
+            allowed_moves: self.allowed_moves,
             depth: self.depth + 1,
         }
     }
@@ -122,16 +115,16 @@ impl CommutatorFinder {
             return;
         }
 
-        for interchange in &params.allowed_moves {
-            let new_state = params.state.clone().apply_move(*interchange);
+        for &interchange in params.allowed_moves {
+            let new_state = params.state.apply_move(interchange);
 
             if let Some(insertion) = self.check_interchange(&params, &new_state) {
                 if self.search_type == SearchType::Edge && interchange.count == MoveCount::Double {
-                    self.find_four_mover(&params, *interchange, insertion.0.clone());
+                    self.find_four_mover(&params, interchange, insertion.source.clone());
                 }
 
                 if self.max_depth - params.depth > 3 {
-                    self.find_insertion(&params, *interchange, insertion);
+                    self.find_insertion(&params, interchange, insertion);
                 }
             }
         }
@@ -139,11 +132,7 @@ impl CommutatorFinder {
         self.find_setup_moves(params);
     }
 
-    fn check_interchange(
-        &self,
-        params: &SearchParams,
-        state: &FaceletCube,
-    ) -> Option<(Slot, Slot)> {
+    fn check_interchange(&self, params: &SearchParams, state: &FaceletCube) -> Option<Insertion> {
         for slot in &params.slots {
             let current = state[slot.current_position];
 
@@ -151,7 +140,10 @@ impl CommutatorFinder {
                 let source = params.get_remaining_slot(slot.value, current);
 
                 if state[source.current_position] == source.value {
-                    return Some((source, slot.clone()));
+                    return Some(Insertion {
+                        source,
+                        target: slot.clone(),
+                    });
                 }
             }
         }
@@ -159,13 +151,9 @@ impl CommutatorFinder {
         None
     }
 
-    fn find_insertion(
-        &mut self,
-        params: &SearchParams,
-        interchange: Move,
-        insertion: (Slot, Slot),
-    ) {
-        let (source, target) = insertion;
+    fn find_insertion(&mut self, params: &SearchParams, interchange: Move, insertion: Insertion) {
+        let Insertion { source, target } = insertion;
+
         let wrapper_moves = params
             .allowed_moves
             .iter()
@@ -179,10 +167,10 @@ impl CommutatorFinder {
             .collect::<Vec<_>>();
 
         for wm in wrapper_moves {
-            let first = params.state.clone().apply_move(*wm);
+            let first = params.state.apply_move(*wm);
 
             for sm in &second_moves {
-                let second = first.clone().apply_move(*sm);
+                let second = first.apply_move(*sm);
                 let last = second.apply_move(wm.inverse());
 
                 if last[target.current_position] == source.value {
@@ -202,7 +190,7 @@ impl CommutatorFinder {
 
         for sm in slice_moves {
             let alg = Alg::new([*sm, interchange, sm.inverse()]);
-            let state = params.state.clone().apply_alg(&alg);
+            let state = params.state.apply_alg(&alg);
 
             for slot in &params.slots {
                 if *slot != source && state[slot.current_position] == source.value {
@@ -215,24 +203,25 @@ impl CommutatorFinder {
     }
 
     fn find_setup_moves(&mut self, params: SearchParams) {
-        for m in &params.allowed_moves {
+        for &m in params.allowed_moves {
             if let Some(last) = self.current_moves.last() {
                 if last.kind == m.kind {
                     continue;
                 }
             }
 
-            self.current_moves.push(*m);
-            self.find_interchange(params.next(*m));
+            self.current_moves.push(m);
+            self.find_interchange(params.next(m));
             self.current_moves.pop();
         }
     }
 
     fn add_commutator(&mut self, interchange: Move, insertion: Alg, insertion_first: bool) {
-        let setup = match !self.current_moves.is_empty() {
-            true => Some(Alg::new(self.current_moves.clone()).clean()),
-            false => None,
-        };
+        let setup = self
+            .current_moves
+            .is_empty()
+            .not()
+            .then_some(Alg::new(self.current_moves.clone()).clean());
         let commutator = Commutator {
             setup,
             interchange,
@@ -255,14 +244,18 @@ where
 {
     let initial_state = FaceletCube::try_from(cycle.inverse());
 
-    initial_state
-        .map(|state| {
-            let finder = CommutatorFinder::new(max_depth, search_type);
-            let params = SearchParams::new(cycle, state, allowed_moves);
+    if let Ok(state) = initial_state {
+        let allowed_moves = allowed_moves
+            .iter()
+            .flat_map(MoveKind::to_moves)
+            .collect::<Vec<_>>();
+        let finder = CommutatorFinder::new(max_depth, search_type);
+        let params = SearchParams::new(cycle, state, &allowed_moves);
 
-            finder.search(params)
-        })
-        .unwrap_or_default()
+        finder.search(params)
+    } else {
+        Vec::new()
+    }
 }
 
 pub fn find_corner_commutators(
@@ -289,7 +282,7 @@ mod tests {
         assert!(!commutator.is_empty());
         assert!(commutator
             .into_iter()
-            .map(|c| initial_state.clone().apply_commutator(&c))
+            .map(|c| initial_state.apply_commutator(&c))
             .all(|s| s == FaceletCube::default()));
     }
 
