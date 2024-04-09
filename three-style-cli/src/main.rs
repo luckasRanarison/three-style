@@ -3,6 +3,7 @@ use clap::{
     Parser, Subcommand,
 };
 use std::{
+    process,
     str::FromStr,
     time::{Duration, Instant},
 };
@@ -110,13 +111,14 @@ fn search_edge_commutators(
 }
 
 fn print_commutators(commutators: Vec<Commutator>, duration: Duration) {
-    let duration = duration.as_secs_f32();
     let count = commutators.len();
-    let bold = Style::new().bold();
-    let cyan = Style::new().fg_color(Some(Color::Ansi(AnsiColor::Cyan)));
+    let duration = duration.as_secs_f32();
     let green = Style::new().fg_color(Some(Color::Ansi(AnsiColor::Green)));
 
     for comm in commutators {
+        let bold = Style::new().bold();
+        let cyan = Style::new().fg_color(Some(Color::Ansi(AnsiColor::Cyan)));
+
         println!(
             "{bold}{}{bold:#}: {} {cyan}({}){cyan:#}",
             comm,
@@ -126,7 +128,10 @@ fn print_commutators(commutators: Vec<Commutator>, duration: Duration) {
     }
 
     if count > 0 {
-        println!("\nFound {green}{count}{green:#} results in {duration:.2}s.");
+        println!(
+            "\nFound {green}{count}{green:#} result{} in {duration:.2}s.",
+            if count > 1 { "s" } else { "" }
+        );
     } else {
         println!("No result found.");
     }
@@ -137,7 +142,7 @@ fn print_error(error: String) {
         .bold()
         .fg_color(Some(Color::Ansi(AnsiColor::Red)));
 
-    eprintln!("{style}error{style:#}: {}", error);
+    eprintln!("{style}error{style:#}: {error}");
 }
 
 fn main() {
@@ -146,5 +151,6 @@ fn main() {
 
     if let Err(error) = result {
         print_error(error.to_string());
+        process::exit(1);
     }
 }
