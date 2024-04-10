@@ -6,7 +6,7 @@ pub trait Inverse {
 }
 
 #[rustfmt::skip]
-#[derive(Debug, PartialEq, Eq, Clone, Copy, Hash)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy, PartialOrd, Ord, Hash)]
 pub enum MoveKind {
     U, R, F, D, L, B,
     X, Y, Z, M, E, S,

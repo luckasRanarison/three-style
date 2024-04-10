@@ -1,6 +1,8 @@
-use super::{core::Inverse, Move};
-use crate::error::Error;
-use std::{fmt, ops::Add, str::FromStr};
+use crate::{
+    error::Error,
+    moves::core::{Inverse, Move, MoveKind},
+};
+use std::{collections::BTreeMap, fmt, ops::Add, str::FromStr};
 
 #[derive(Debug, Default, PartialEq, Clone)]
 pub struct Alg(Vec<Move>);
@@ -26,35 +28,29 @@ impl Alg {
     }
 
     pub fn clean(self) -> Self {
-        let mut groups: Vec<Vec<Option<Move>>> = vec![];
+        let mut groups: Vec<BTreeMap<MoveKind, Move>> = vec![];
 
         for m in self.0 {
-            if let Some(last_group) = groups.last_mut() {
-                let aligned_move = last_group
-                    .iter()
-                    .flatten()
-                    .last()
-                    .filter(|l| l.kind == m.kind || m.kind == l.kind.inverse());
+            if let Some(last) = groups.last_mut() {
+                let prev_value = last.remove(&m.kind);
+                let has_prev_value = prev_value.is_some();
+                let result = match prev_value {
+                    Some(n) => n * m,
+                    None => last.contains_key(&m.kind.inverse()).then_some(m),
+                };
 
-                if aligned_move.is_some() {
-                    let existing_move = last_group.iter_mut().find_map(|n| {
-                        n.and_then(|l| if l.kind == m.kind { Some((n, l)) } else { None })
-                    });
-
-                    if let Some((move_ref, move_val)) = existing_move {
-                        *move_ref = move_val * m;
-                    } else {
-                        last_group.push(Some(m));
-                    }
-
+                if let Some(value) = result {
+                    last.insert(m.kind, value);
+                }
+                if result.is_some() || has_prev_value {
                     continue;
                 }
             }
 
-            groups.push(vec![Some(m)]);
+            groups.push([(m.kind, m)].into());
         }
 
-        Alg::new(groups.into_iter().flatten().flatten())
+        Alg::new(groups.into_iter().flat_map(|g| g.into_values()))
     }
 }
 
