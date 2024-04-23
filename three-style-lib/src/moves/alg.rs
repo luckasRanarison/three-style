@@ -42,6 +42,9 @@ impl Alg {
                 if let Some(value) = result {
                     last.insert(m.kind, value);
                 }
+                if last.is_empty() {
+                    groups.pop();
+                }
                 if result.is_some() || has_prev_value {
                     continue;
                 }
