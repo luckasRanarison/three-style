@@ -32,6 +32,7 @@ impl Cli {
             edges,
             gen,
             depth,
+            raw,
         }) = self.command
         {
             let allowed_moves = gen
@@ -46,7 +47,7 @@ impl Cli {
             };
             let end = Instant::now();
 
-            print_commutators(commutators, end - start);
+            print_commutators(commutators, end - start, raw);
         }
 
         Ok(())
@@ -62,17 +63,20 @@ enum Command {
         .args(&["corners", "edges"]),
     ))]
     Search {
-        #[arg(long, short, num_args(3))]
+        #[arg(long, short, num_args(3), help = "Corner cycle")]
         corners: Option<Vec<String>>,
 
-        #[arg(long, short, num_args(3))]
+        #[arg(long, short, num_args(3), help = "Edge cycle")]
         edges: Option<Vec<String>>,
 
-        #[arg(long, short)]
+        #[arg(long, short, help = "Allwed movesets")]
         gen: String,
 
-        #[arg(long, short)]
+        #[arg(long, short, help = "Maximum search depth")]
         depth: u8,
+
+        #[arg(long, short, help = "Display the non-reduced algorithm")]
+        raw: bool,
     },
 }
 
@@ -106,7 +110,7 @@ fn search_edge_commutators(
     Ok(results)
 }
 
-fn print_commutators(commutators: Vec<Commutator>, duration: Duration) {
+fn print_commutators(commutators: Vec<Commutator>, duration: Duration, raw: bool) {
     let count = commutators.len();
     let duration = duration.as_secs_f32();
     let green = Style::new().fg_color(Some(Color::Ansi(AnsiColor::Green)));
@@ -114,13 +118,10 @@ fn print_commutators(commutators: Vec<Commutator>, duration: Duration) {
     for comm in commutators {
         let bold = Style::new().bold();
         let cyan = Style::new().fg_color(Some(Color::Ansi(AnsiColor::Cyan)));
+        let alg = comm.expand();
+        let alg = if raw { alg } else { alg.reduce() };
 
-        println!(
-            "{bold}{}{bold:#}: {} {cyan}({}){cyan:#}",
-            comm,
-            comm.expand(),
-            comm.expand().len()
-        );
+        println!("{bold}{comm}{bold:#}: {alg} {cyan}({}){cyan:#}", alg.len());
     }
 
     if count > 0 {

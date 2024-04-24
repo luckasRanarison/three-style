@@ -35,10 +35,12 @@ three-style search --gen RUE --edges UF UB LF --depth 5
 # shorter versions
 three-style search -g RUD -c UFR UBL RFD -d 4
 three-style search -g RUE -e UF UB LF -d 5
+
+three-style help
 ```
 
 > [!NOTE]
-> Depth is relative to the length of the commutator in its notation form.
+> Depth is relative to the length of the commutator in its notation form and expanded commutators are reduced by default, meaning cancellations are taken into account.
 
 ## Concept
 
