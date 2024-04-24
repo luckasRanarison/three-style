@@ -161,6 +161,57 @@ impl Move {
     pub fn new(kind: MoveKind, count: MoveCount) -> Self {
         Self { kind, count }
     }
+
+    fn reduce(&self, rhs: Move) -> Option<Move> {
+        use {MoveCount as C, MoveKind as M};
+
+        let is_inversed = self.count.inverse() == rhs.count;
+        let is_slice = self.kind.is_slice();
+        let count = if is_slice { rhs.count } else { self.count }; // determined by wide or side moves
+
+        match (self.kind, self.count, rhs.kind, rhs.count) {
+            // wide move generators
+            (M::U, _, M::E, _) => Some(Move::new(M::Uw, count)),
+            (M::E, _, M::D, _) if is_inversed => Some(Move::new(M::Dw, count)),
+            (M::L, _, M::M, _) => Some(Move::new(M::Lw, count)),
+            (M::M, _, M::R, _) if is_inversed => Some(Move::new(M::Rw, count)),
+            (M::F, _, M::S, _) => Some(Move::new(M::Fw, count)),
+            (M::S, _, M::B, _) if is_inversed => Some(Move::new(M::Bw, count)),
+
+            // wide move reduction
+            (M::R, C::Prime, M::Rw, C::Simple) => Some(Move::new(M::M, C::Prime)),
+            (M::R, C::Simple, M::Rw, C::Prime) => Some(Move::new(M::M, C::Simple)),
+            (M::L, C::Prime, M::Lw, C::Simple) => Some(Move::new(M::M, C::Simple)),
+            (M::L, C::Simple, M::Lw, C::Prime) => Some(Move::new(M::M, C::Prime)),
+            (M::U, C::Prime, M::Uw, C::Simple) => Some(Move::new(M::E, C::Simple)),
+            (M::U, C::Simple, M::Uw, C::Prime) => Some(Move::new(M::E, C::Prime)),
+            (M::D, C::Prime, M::Dw, C::Simple) => Some(Move::new(M::E, C::Prime)),
+            (M::D, C::Simple, M::Dw, C::Prime) => Some(Move::new(M::E, C::Simple)),
+            (M::F, C::Prime, M::Fw, C::Simple) => Some(Move::new(M::S, C::Simple)),
+            (M::F, C::Simple, M::Fw, C::Prime) => Some(Move::new(M::S, C::Prime)),
+            (M::B, C::Prime, M::Bw, C::Simple) => Some(Move::new(M::S, C::Prime)),
+            (M::B, C::Simple, M::Bw, C::Prime) => Some(Move::new(M::S, C::Simple)),
+
+            (M::M, _, M::Lw, _) if is_inversed => Some(Move::new(M::L, count)),
+            (M::M, _, M::Rw, _) if self.count == rhs.count => Some(Move::new(M::R, count)),
+            (M::E, _, M::Uw, _) if is_inversed => Some(Move::new(M::U, count)),
+            (M::E, _, M::Dw, _) if self.count == rhs.count => Some(Move::new(M::D, count)),
+            (M::S, _, M::Fw, _) if is_inversed => Some(Move::new(M::F, count)),
+            (M::S, _, M::Bw, _) if self.count == rhs.count => Some(Move::new(M::B, count)),
+
+            // move count reduction
+            (_, _, _, _) if self.kind == rhs.kind && !is_inversed => {
+                let kind = self.kind;
+                let count = match (self.count as usize + rhs.count as usize) % 4 {
+                    2 => MoveCount::Double,
+                    3 => MoveCount::Prime,
+                    _ => MoveCount::Simple,
+                };
+                Some(Move { kind, count })
+            }
+            _ => None,
+        }
+    }
 }
 
 impl Inverse for Move {
@@ -173,22 +224,7 @@ impl Mul<Move> for Move {
     type Output = Option<Move>;
 
     fn mul(self, rhs: Move) -> Self::Output {
-        if rhs.kind != self.kind {
-            return None;
-        }
-
-        if self.count == rhs.count.inverse() {
-            return None;
-        }
-
-        let kind = self.kind;
-        let count = match (self.count as usize + rhs.count as usize) % 4 {
-            2 => MoveCount::Double,
-            3 => MoveCount::Prime,
-            _ => MoveCount::Simple,
-        };
-
-        Some(Move { kind, count })
+        self.reduce(rhs).or(rhs.reduce(self))
     }
 }
 

@@ -27,33 +27,49 @@ impl Alg {
         self.0.iter()
     }
 
-    pub fn clean(self) -> Self {
-        let mut groups: Vec<BTreeMap<MoveKind, Move>> = vec![];
+    pub fn reduce(self) -> Self {
+        let mut moves = Vec::new();
+        let mut stack = Vec::new();
+        let mut group: BTreeMap<MoveKind, Move> = BTreeMap::new();
 
         for m in self.0 {
-            if let Some(last) = groups.last_mut() {
-                let prev_value = last.remove(&m.kind);
-                let has_prev_value = prev_value.is_some();
-                let result = match prev_value {
-                    Some(n) => n * m,
-                    None => last.contains_key(&m.kind.inverse()).then_some(m),
-                };
+            let prev_value = group.remove(&m.kind);
+            let has_prev_value = prev_value.is_some();
 
-                if let Some(value) = result {
-                    last.insert(m.kind, value);
-                }
-                if last.is_empty() {
-                    groups.pop();
-                }
-                if result.is_some() || has_prev_value {
+            let result = match prev_value {
+                Some(n) => n * m,
+                None => group.contains_key(&m.kind.inverse()).then_some(m),
+            };
+
+            if let Some(value) = result {
+                group.insert(m.kind, value);
+            }
+            if result.is_some() || has_prev_value {
+                continue;
+            }
+
+            while let Some((_, m)) = group.pop_first() {
+                moves.push(m);
+            }
+
+            group.insert(m.kind, m);
+        }
+
+        moves.extend(group.into_values());
+
+        for m in moves {
+            if let Some(&last) = stack.last() {
+                if let Some(result) = last * m {
+                    stack.pop();
+                    stack.push(result);
                     continue;
                 }
             }
 
-            groups.push([(m.kind, m)].into());
+            stack.push(m);
         }
 
-        Alg::new(groups.into_iter().flat_map(|g| g.into_values()))
+        Alg::new(stack)
     }
 }
 
@@ -163,17 +179,21 @@ mod tests {
     }
 
     #[test]
-    fn test_move_cancelation() {
-        let alg = alg!("U D2 D U'").clean();
+    fn test_move_reduction() {
+        let alg = alg!("U D2 D U'").reduce();
         let expected = alg!("D'");
         assert_eq!(expected, alg);
 
-        let alg = alg!("R U R' U D' U2").clean();
+        let alg = alg!("R U R' U D' U2").reduce();
         let expected = alg!("R U R' U' D''");
         assert_eq!(expected, alg);
 
-        let alg = alg!("U2 U2 D D' R").clean();
+        let alg = alg!("U2 U2 D D' R").reduce();
         let expected = alg!("R");
+        assert_eq!(expected, alg);
+
+        let alg = alg!("M R' U r R'").reduce();
+        let expected = alg!("r' U M'");
         assert_eq!(expected, alg);
     }
 }

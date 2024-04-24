@@ -31,12 +31,11 @@ impl Commutator {
             (&interchange, &self.insertion)
         };
         let middle = first + second + first.inverse() + second.inverse();
-        let alg = match &self.setup {
+
+        match &self.setup {
             Some(setup) => setup + &middle + setup.inverse(),
             _ => middle,
-        };
-
-        alg.clean()
+        }
     }
 }
 
@@ -162,6 +161,6 @@ mod tests {
         };
         let expected = alg!("D R' D' R U R' D R U' D'");
 
-        assert_eq!(expected, commutator.expand());
+        assert_eq!(expected, commutator.expand().reduce());
     }
 }

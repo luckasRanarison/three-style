@@ -221,7 +221,7 @@ impl CommutatorFinder {
             .current_moves
             .is_empty()
             .not()
-            .then_some(Alg::new(self.current_moves.clone()).clean());
+            .then_some(Alg::new(self.current_moves.clone()).reduce());
         let commutator = Commutator {
             setup,
             interchange,
