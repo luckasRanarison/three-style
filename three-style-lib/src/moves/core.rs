@@ -107,7 +107,9 @@ impl FromStr for MoveKind {
 
 impl fmt::Display for MoveKind {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{:?}", self)
+        let s = format!("{self:?}");
+        let s = if self.is_wide() { s.to_lowercase() } else { s };
+        write!(f, "{}", &s[..1])
     }
 }
 
