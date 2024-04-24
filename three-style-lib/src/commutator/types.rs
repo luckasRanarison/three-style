@@ -5,7 +5,6 @@ use crate::{
 };
 use std::fmt;
 
-/// Represents a 3-cycle commutator.
 #[derive(Debug, Clone, PartialEq)]
 #[allow(clippy::len_without_is_empty)]
 pub struct Commutator {
@@ -21,7 +20,7 @@ impl Commutator {
         self.setup.is_none()
     }
 
-    /// Returns the length og the commutator in its notation form.
+    /// Returns the length of the commutator in its notation form.
     pub fn len(&self) -> usize {
         self.setup.as_ref().map_or(0, |s| s.len()) + self.insertion.len() + 1
     }

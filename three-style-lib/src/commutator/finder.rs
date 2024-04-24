@@ -21,6 +21,16 @@ struct Insertion {
     target: Slot,
 }
 
+impl Insertion {
+    fn inserted(&self, state: FaceletCube) -> bool {
+        state[self.target.current_position] == self.source.value
+    }
+
+    fn first(&self) -> bool {
+        self.target.initial_position == self.source.value
+    }
+}
+
 #[derive(Debug)]
 struct SearchParams<'a> {
     state: FaceletCube,
@@ -155,8 +165,6 @@ impl CommutatorFinder {
     }
 
     fn find_insertion(&mut self, params: &SearchParams, interchange: Move, insertion: Insertion) {
-        let Insertion { source, target } = insertion;
-
         let wrapper_moves = params
             .allowed_moves
             .iter()
@@ -176,9 +184,9 @@ impl CommutatorFinder {
                 let second = first.apply_move(*sm);
                 let last = second.apply_move(wm.inverse());
 
-                if last[target.current_position] == source.value {
+                if insertion.inserted(last) {
+                    let insertion_first = insertion.first();
                     let insertion = Alg::new([*wm, *sm, wm.inverse()]);
-                    let insertion_first = target.initial_position == source.value;
                     self.add_commutator(interchange, insertion, insertion_first);
                 }
             }

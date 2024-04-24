@@ -37,8 +37,7 @@ impl Alg {
         let mut stack = Vec::new();
         let mut group: BTreeMap<MoveKind, Move> = BTreeMap::new();
 
-        // First pass, moves should constantly be re-evaluated
-        // as long as parallelism isn't broken
+        // First pass, moves should constantly be re-evaluated as long as parallelism isn't broken
         for m in self.0 {
             let prev_value = group.remove(&m.kind);
             let has_prev_value = prev_value.is_some();
@@ -65,8 +64,7 @@ impl Alg {
 
         moves.extend(group.into_values());
 
-        // Second pass, search wide moves generators and reductions
-        // by trying to reduce move pairs successively
+        // Second pass, search wide moves reductions by reducing move pairs successively
         for m in moves {
             let result = stack.last().and_then(|&l| l * m);
 

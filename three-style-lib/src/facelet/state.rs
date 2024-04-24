@@ -16,7 +16,7 @@ use std::{
 
 /// State of the cube at the facelet level
 /// in the "is replaced by" representation.
-/// See https://kociemba.org/cube.htm for more details
+/// See https://kociemba.org/cube.htm for more details.
 #[derive(Debug, PartialEq, Eq, Clone, Hash)]
 pub struct FaceletCube(FaceletState);
 
