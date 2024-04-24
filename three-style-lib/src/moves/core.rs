@@ -226,7 +226,7 @@ impl Mul<Move> for Move {
     type Output = Option<Move>;
 
     fn mul(self, rhs: Move) -> Self::Output {
-        self.reduce(rhs).or(rhs.reduce(self))
+        self.reduce(rhs).or(rhs.reduce(self)) // reduce is not commutative
     }
 }
 

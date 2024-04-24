@@ -15,23 +15,30 @@ impl Alg {
         Self(moves.into_iter().collect())
     }
 
+    /// Returns the number of moves of the algorithm.
     pub fn len(&self) -> usize {
         self.0.len()
     }
 
+    /// Returns `true` if the algorithm has no moves.
     pub fn is_empty(&self) -> bool {
-        self.len() == 0
+        self.0.is_empty()
     }
 
+    /// Returns an iterator over moves.
     pub fn iter(&self) -> impl Iterator<Item = &Move> {
         self.0.iter()
     }
 
+    /// Reduces the algorithm by applying cancellations rules.
+    /// Example: `U2 D U' R M'` -> `U D r`
     pub fn reduce(self) -> Self {
         let mut moves = Vec::new();
         let mut stack = Vec::new();
         let mut group: BTreeMap<MoveKind, Move> = BTreeMap::new();
 
+        // First pass, moves should constantly be re-evaluated
+        // as long as parallelism isn't broken
         for m in self.0 {
             let prev_value = group.remove(&m.kind);
             let has_prev_value = prev_value.is_some();
@@ -48,6 +55,7 @@ impl Alg {
                 continue;
             }
 
+            // parallelism has been broken so commit the current moves
             while let Some((_, m)) = group.pop_first() {
                 moves.push(m);
             }
@@ -57,16 +65,17 @@ impl Alg {
 
         moves.extend(group.into_values());
 
+        // Second pass, search wide moves generators and reductions
+        // by trying to reduce move pairs successively
         for m in moves {
-            if let Some(&last) = stack.last() {
-                if let Some(result) = last * m {
-                    stack.pop();
-                    stack.push(result);
-                    continue;
-                }
-            }
+            let result = stack.last().and_then(|&l| l * m);
 
-            stack.push(m);
+            if let Some(result) = result {
+                stack.pop();
+                stack.push(result);
+            } else {
+                stack.push(m);
+            }
         }
 
         Alg::new(stack)

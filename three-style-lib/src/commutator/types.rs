@@ -5,6 +5,7 @@ use crate::{
 };
 use std::fmt;
 
+/// Represents a 3-cycle commutator.
 #[derive(Debug, Clone, PartialEq)]
 #[allow(clippy::len_without_is_empty)]
 pub struct Commutator {
@@ -15,14 +16,17 @@ pub struct Commutator {
 }
 
 impl Commutator {
+    /// Returns `true` if the commutator has no setup moves.
     pub fn is_pure(&self) -> bool {
         self.setup.is_none()
     }
 
+    /// Returns the length og the commutator in its notation form.
     pub fn len(&self) -> usize {
         self.setup.as_ref().map_or(0, |s| s.len()) + self.insertion.len() + 1
     }
 
+    /// Returns the non-reduced expanded algorithm.
     pub fn expand(&self) -> Alg {
         let interchange = Alg::new([self.interchange]);
         let (first, second) = if self.insertion_first {
@@ -59,6 +63,7 @@ impl fmt::Display for Commutator {
     }
 }
 
+/// Wrapper around 3-cycle targets (stickers).
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Cycle<T> {
     targets: [T; 3],

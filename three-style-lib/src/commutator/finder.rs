@@ -6,6 +6,8 @@ use crate::{
 };
 use std::{fmt, ops::Not};
 
+/// Tracks the state of a moving facelet position,
+/// used for detecting interchange and insertions.
 #[derive(Debug, PartialEq, Clone)]
 struct Slot {
     initial_position: Facelet,
@@ -108,7 +110,7 @@ impl CommutatorFinder {
     fn find_interchange(&mut self, params: SearchParams) {
         let threshold = match self.search_type {
             SearchType::Corner => 4,
-            SearchType::Edge => 2,
+            SearchType::Edge => 2, // possible four movers
         };
 
         if self.max_depth - params.depth < threshold {
@@ -134,14 +136,15 @@ impl CommutatorFinder {
 
     fn check_interchange(&self, params: &SearchParams, state: &FaceletCube) -> Option<Insertion> {
         for slot in &params.slots {
-            let current = state[slot.current_position];
+            let next_value = state[slot.current_position];
 
-            if slot.value != current && params.inside_cycle(current) {
-                let source = params.get_remaining_slot(slot.value, current);
+            if slot.value != next_value && params.inside_cycle(next_value) {
+                let other = params.get_remaining_slot(slot.value, next_value);
+                let outside_interchage = state[other.current_position] == other.value;
 
-                if state[source.current_position] == source.value {
+                if outside_interchage {
                     return Some(Insertion {
-                        source,
+                        source: other,
                         target: slot.clone(),
                     });
                 }

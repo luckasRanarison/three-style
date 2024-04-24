@@ -14,6 +14,9 @@ use std::{
     ops::{Index, IndexMut, Mul},
 };
 
+/// State of the cube at the facelet level
+/// in the "is replaced by" representation.
+/// See https://kociemba.org/cube.htm for more details
 #[derive(Debug, PartialEq, Eq, Clone, Hash)]
 pub struct FaceletCube(FaceletState);
 
@@ -421,7 +424,7 @@ mod tests {
         let cube = FaceletCube::default().cycle(cycle).unwrap();
 
         #[rustfmt::skip]
-        let expecte = FaceletCube([
+        let expected = FaceletCube([
             F::U0, F::U7, F::U2, F::U3, F::U4, F::U5, F::U6, F::F3, F::U8,
             F::R0, F::R1, F::R2, F::R3, F::R4, F::R5, F::R6, F::R7, F::R8,
             F::F0, F::L5, F::F2, F::U1, F::F4, F::F5, F::F6, F::F7, F::F8,
@@ -430,7 +433,7 @@ mod tests {
             F::B0, F::F1, F::B2, F::B3, F::B4, F::B5, F::B6, F::B7, F::B8,
         ]);
 
-        assert_eq!(expecte, cube);
+        assert_eq!(expected, cube);
 
         let cube = cube.cycle(cycle.inverse()).unwrap();
 
@@ -443,7 +446,7 @@ mod tests {
         let cube = FaceletCube::default().cycle(cycle).unwrap();
 
         #[rustfmt::skip]
-        let expecte = FaceletCube([
+        let expected = FaceletCube([
             F::U0, F::U1, F::U2, F::U3, F::U4, F::U5, F::U8, F::U7, F::R6,
             F::D2, F::R1, F::R2, F::R3, F::R4, F::R5, F::U6, F::R7, F::R8,
             F::R0, F::F1, F::F8, F::F3, F::F4, F::F5, F::F6, F::F7, F::L2,
@@ -452,7 +455,7 @@ mod tests {
             F::B0, F::B1, F::B2, F::B3, F::B4, F::B5, F::B6, F::B7, F::B8,
         ]);
 
-        assert_eq!(expecte, cube);
+        assert_eq!(expected, cube);
 
         let cube = cube.cycle(cycle.inverse()).unwrap();
 

@@ -39,6 +39,7 @@ pub trait FaceletTarget {
     }
 }
 
+/// Represents all the facelets of a cube in the`URFDLB` order.
 pub type FaceletState = [Facelet; 54];
 
 #[rustfmt::skip]
@@ -51,15 +52,9 @@ pub const DEFAULT_STATE: FaceletState = [
     F::B0, F::B1, F::B2, F::B3, F::B4, F::B5, F::B6, F::B7, F::B8,
 ];
 
+#[rustfmt::skip]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum Color {
-    U,
-    R,
-    F,
-    D,
-    L,
-    B,
-}
+pub enum Color { U, R, F, D, L, B }
 
 impl fmt::Display for Color {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {

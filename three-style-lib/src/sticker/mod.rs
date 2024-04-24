@@ -7,6 +7,7 @@ use crate::{
 use constants::{CORNER_FACELET_MAP, EDGE_FACELET_MAP};
 use std::{fmt, str::FromStr};
 
+/// Layer based representation of corner stickers.
 #[rustfmt::skip]
 #[derive(Debug, PartialEq, Clone, Copy)]
 pub enum Corner {
@@ -66,6 +67,7 @@ impl fmt::Display for Corner {
     }
 }
 
+/// Layer based representation of edge stickers.
 #[rustfmt::skip]
 #[derive(Debug, PartialEq, Clone, Copy)]
 pub enum Edge {

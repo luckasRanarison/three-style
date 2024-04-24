@@ -2,6 +2,9 @@ use super::{types::DEFAULT_STATE, Facelet, FaceletCube, FaceletState};
 use crate::moves::Move;
 use std::ops::Index;
 
+/// State of the cube at the facelet level
+/// in the "is carried to" representation.
+/// It is used to know where facelets will land on
 #[derive(Debug, PartialEq, Clone)]
 pub struct FaceletPermutation(FaceletState);
 
