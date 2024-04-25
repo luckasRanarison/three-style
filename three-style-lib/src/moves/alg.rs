@@ -44,7 +44,12 @@ impl Alg {
 
             let result = match prev_value {
                 Some(n) => n * m,
-                None => group.contains_key(&m.kind.inverse()).then_some(m),
+                None => m
+                    .kind
+                    .parallel()
+                    .iter()
+                    .any(|n| group.contains_key(n))
+                    .then_some(m),
             };
 
             if let Some(value) = result {
