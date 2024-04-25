@@ -173,8 +173,8 @@ impl Move {
 
         match (self.kind, self.count, rhs.kind, rhs.count) {
             // wide move generators
-            (M::U, _, M::E, _) => Some(Move::new(M::Uw, count)),
-            (M::E, _, M::D, _) if is_inversed => Some(Move::new(M::Dw, count)),
+            (M::D, _, M::E, _) => Some(Move::new(M::Dw, count)),
+            (M::E, _, M::U, _) if is_inversed => Some(Move::new(M::Uw, count)),
             (M::L, _, M::M, _) => Some(Move::new(M::Lw, count)),
             (M::M, _, M::R, _) if is_inversed => Some(Move::new(M::Rw, count)),
             (M::F, _, M::S, _) => Some(Move::new(M::Fw, count)),
@@ -185,10 +185,10 @@ impl Move {
             (M::R, C::Simple, M::Rw, C::Prime) => Some(Move::new(M::M, C::Simple)),
             (M::L, C::Prime, M::Lw, C::Simple) => Some(Move::new(M::M, C::Simple)),
             (M::L, C::Simple, M::Lw, C::Prime) => Some(Move::new(M::M, C::Prime)),
-            (M::U, C::Prime, M::Uw, C::Simple) => Some(Move::new(M::E, C::Simple)),
-            (M::U, C::Simple, M::Uw, C::Prime) => Some(Move::new(M::E, C::Prime)),
-            (M::D, C::Prime, M::Dw, C::Simple) => Some(Move::new(M::E, C::Prime)),
-            (M::D, C::Simple, M::Dw, C::Prime) => Some(Move::new(M::E, C::Simple)),
+            (M::U, C::Prime, M::Uw, C::Simple) => Some(Move::new(M::E, C::Prime)),
+            (M::U, C::Simple, M::Uw, C::Prime) => Some(Move::new(M::E, C::Simple)),
+            (M::D, C::Prime, M::Dw, C::Simple) => Some(Move::new(M::E, C::Simple)),
+            (M::D, C::Simple, M::Dw, C::Prime) => Some(Move::new(M::E, C::Prime)),
             (M::F, C::Prime, M::Fw, C::Simple) => Some(Move::new(M::S, C::Simple)),
             (M::F, C::Simple, M::Fw, C::Prime) => Some(Move::new(M::S, C::Prime)),
             (M::B, C::Prime, M::Bw, C::Simple) => Some(Move::new(M::S, C::Prime)),
@@ -196,8 +196,8 @@ impl Move {
 
             (M::M, _, M::Lw, _) if is_inversed => Some(Move::new(M::L, count)),
             (M::M, _, M::Rw, _) if self.count == rhs.count => Some(Move::new(M::R, count)),
-            (M::E, _, M::Uw, _) if is_inversed => Some(Move::new(M::U, count)),
-            (M::E, _, M::Dw, _) if self.count == rhs.count => Some(Move::new(M::D, count)),
+            (M::E, _, M::Dw, _) if is_inversed => Some(Move::new(M::D, count)),
+            (M::E, _, M::Uw, _) if self.count == rhs.count => Some(Move::new(M::U, count)),
             (M::S, _, M::Fw, _) if is_inversed => Some(Move::new(M::F, count)),
             (M::S, _, M::Bw, _) if self.count == rhs.count => Some(Move::new(M::B, count)),
 
